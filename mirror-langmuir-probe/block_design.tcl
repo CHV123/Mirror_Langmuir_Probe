@@ -79,7 +79,7 @@ for {set i 0} {$i < [get_parameter n_adc]} {incr i} {
 # Adding the "Set Voltage" ip and making the appropriate connections
 create_bd_cell -type ip -vlnv PSFC:user:set_voltage:1.0 set_voltage_0
 
-set_property -dict [list CONFIG.period {125000}] [get_bd_cells set_voltage_0]
+set_property -dict [list CONFIG.period {125}] [get_bd_cells set_voltage_0]
 
 # Setting input connections
 connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins set_voltage_0/adc_clk]
@@ -92,6 +92,7 @@ connect_bd_net [get_bd_pins ctl/led] [get_bd_pins set_voltage_0/period_in]
 # Setting output connections
 connect_bd_net [get_bd_pins set_voltage_0/volt_out] [get_bd_pins adc_dac/dac1] ;# connecting output to dac1
 connect_bd_net [get_bd_pins set_voltage_0/volt_out] [get_bd_pins adc_dac/dac2] ;# connecting output to dac2
+# Need slice to connect to LEDs
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 slice_volt_out_led_13_6
 set_property -dict [list CONFIG.DIN_TO {6} CONFIG.DIN_FROM {13} CONFIG.DIN_WIDTH {14} CONFIG.DIN_TO {6} CONFIG.DIN_FROM {13} CONFIG.DOUT_WIDTH {8}] [get_bd_cells slice_volt_out_led_13_6]
 connect_bd_net [get_bd_pins set_voltage_0/volt_out] [get_bd_pins slice_volt_out_led_13_6/Din]

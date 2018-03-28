@@ -46,16 +46,16 @@ begin  -- architecture Behavioral
   -- Process to define the level period
   period_proc : process(adc_clk)
     variable div3 : integer := 0;
-    variable div2 : integer := 0;
+    variable div8 : integer := 0;
     variable div4 : integer := 0;
   begin
     if rising_edge(adc_clk) then
-      if period_in > to_unsigned(30, period_in'length) then
-        div2 := to_integer(shift_right(period_in, 1));
+      if period_in > period then
+        div8 := to_integer(shift_right(period_in, 3));
         div4 := to_integer(shift_right(period_in, 2));
-        div3 := to_integer(shift_right(to_unsigned(div4 + div2, 20), 1));
+        div3 := to_integer(to_unsigned(div4 + div8, 32));
         period_mask <= div3;
-        adjust_mask <= (div3 + div3 + div3) - to_integer(period_in);
+        adjust_mask <= div3 - div4;
       else
         period_mask <= period;
         adjust_mask <= adjust;

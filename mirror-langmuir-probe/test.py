@@ -27,9 +27,9 @@ def int2signed(convInt):
 ##########################################################
 
 driver.set_voltage_1(int(int2signed(4000), 2))
-driver.set_voltage_2(int(int2signed(-5000), 2))
-driver.set_voltage_3(int(int2signed(2000), 2))
-driver.set_led(int(1e6))
+driver.set_voltage_2(int(int2signed(500), 2))
+driver.set_voltage_3(int(int2signed(-2000), 2))
+driver.set_led(int(125e4))
 
 print(driver.get_temperature())
 print(driver.get_Isaturation())

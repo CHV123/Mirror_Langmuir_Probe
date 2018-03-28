@@ -1,0 +1,26 @@
+# Temporary files
+*~
+
+# Python:
+*.pyc
+*.egg-info
+dist/
+build/
+
+# Folders
+tmp
+.Xil
+.vscode
+node_modules/
+instruments/Graham_neutron_pulse
+
+# Vivado
+*.jou
+*.log
+vivado_*.str
+
+\.vscode/
+.cache/
+*.img
+
+venv/

@@ -7,7 +7,7 @@ import numpy as np
 
 from koheron import command
 
-class Pulse(object):
+class MLP(object):
     def __init__(self, client):
         self.client = client
         # self.n_pts = 16384
@@ -22,42 +22,50 @@ class Pulse(object):
         pass
 
     @command()
-    def get_count(self):
+    def set_led(self, led):
+        pass
+
+    @command()
+    def set_voltage_1(self, voltage1):
+        pass
+
+    @command()
+    def set_voltage_2(self, voltage2):
+        pass
+
+    @command()
+    def set_voltage_3(self, voltage3):
+        pass
+
+    @command()
+    def get_temperature(self):
         return self.client.recv_uint32()
 
     @command()
-    def set_pulse_width(self, width):
-        pass
-
-    @command()
-    def set_pulse_period(self, period):
-        pass
-
-    def set_dac(self):
-        @command()
-        def set_dac_data(self, data):
-            pass
-        dac_data_1 = np.uint32(np.mod(np.floor(8192 * self.dac[0, :]) + 8192, 16384) + 8192)
-        dac_data_2 = np.uint32(np.mod(np.floor(8192 * self.dac[1, :]) + 8192, 16384) + 8192)
-        set_dac_data(self, dac_data_1 + 65536 * dac_data_2)
-
-    @command()
-    def get_fifo_length(self):
+    def get_Isaturation(self):
         return self.client.recv_uint32()
 
     @command()
-    def get_fifo_buffer(self):
-        return self.client.recv_array(1024, dtype='uint32')
+    def get_Edensity(self):
+        return self.client.recv_uint32()
 
-    @command()
-    def reset_fifo(self):
-        pass
+    # def set_dac(self):
+    #     @command()
+    #     def set_dac_data(self, data):
+    #         pass
+    #     dac_data_1 = np.uint32(np.mod(np.floor(8192 * self.dac[0, :]) + 8192, 16384) + 8192)
+    #     dac_data_2 = np.uint32(np.mod(np.floor(8192 * self.dac[1, :]) + 8192, 16384) + 8192)
+    #     set_dac_data(self, dac_data_1 + 65536 * dac_data_2)
 
-    @command()
-    def get_next_pulse(self, n_pts):
-        assert n_pts > 0
-        assert n_pts <= 16386
-        data_rcv = self.client.recv_vector(dtype='uint32')
-        assert(data_rcv[0] & (1 << 15) == (1 << 15))
-        return data_rcv
+    # @command()
+    # def get_fifo_length(self):
+    #     return self.client.recv_uint32()
+
+    # @command()
+    # def get_fifo_buffer(self):
+    #     return self.client.recv_array(1024, dtype='uint32')
+
+    # @command()
+    # def reset_fifo(self):
+    #     pass
 

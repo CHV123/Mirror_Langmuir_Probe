@@ -2,55 +2,35 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import matplotlib
-matplotlib.use('GTKAgg')
-from matplotlib import pyplot as plt
 import os
 import time
 
-from pulse import Pulse
+from MLP import MLP
 from koheron import connect
 
-host = os.getenv('HOST', '192.168.1.7')
-client = connect(host, name='pulse-generator')
-driver = Pulse(client)
+host = os.getenv('HOST', '198.125.182.104')
+client = connect(host, name='mirror-langmuir-probe')
+driver = MLP(client)
 
-pulse_width = 128
-n_pulse = 64
-pulse_frequency = 1000
+#########################################################
+# Function for converting an integer to a signed binary
+def int2signed(convInt):
+    convInt = int(np.floor(convInt))
+    if convInt < 0:
+        retBin = '{:032b}'.format(convInt & 0xffffffff)
+    else:
+        retBin = '{:032b}'.format(convInt)
 
-pulse_period = np.uint32(driver.fs / pulse_frequency)
+    print(convInt, retBin)
+        
+    return retBin
+##########################################################
 
-# Send Gaussian pulses to DACs
-t = np.arange(driver.n_pts) / driver.fs # time grid (s)
-driver.dac[0,:] = 0.6 * np.exp(-(t - 500e-9)**2/(150e-9)**2)
-driver.dac[1,:] = 0.6 * np.exp(-(t - 500e-9)**2/(150e-9)**2)
-driver.set_dac()
+driver.set_voltage_1(int(int2signed(4000), 2))
+driver.set_voltage_2(int(int2signed(-5000), 2))
+driver.set_voltage_3(int(int2signed(2000), 2))
+driver.set_led(int(1e6))
 
-driver.set_pulse_width(pulse_width)
-driver.set_pulse_period(pulse_period)
-
-n = pulse_width * n_pulse
-
-# Dynamic plot
-fig = plt.figure()
-ax = fig.add_subplot(111)
-x = np.arange(n)
-y = np.zeros(n)
-li, = ax.plot(x, y)
-ax.set_ylim((-200, 5200))
-ax.set_xlabel('FIFO sample number')
-ax.set_ylabel('ADC raw value')
-fig.canvas.draw()
-
-while True:
-    try:
-        data_rcv = driver.get_next_pulse(n)
-        adc0 = (np.int32(data_rcv % 16384) - 8192) % 16384 - 8192
-        adc1 = (np.int32((data_rcv >> 16) % 16384) - 8192) % 16384 - 8192
-        print driver.get_fifo_length(), np.mean(adc0), np.mean(adc1)
-        li.set_ydata(adc0)
-        fig.canvas.draw()
-        plt.pause(0.001)
-    except KeyboardInterrupt:
-        break
+print(driver.get_temperature())
+print(driver.get_Isaturation())
+print(driver.get_Edensity())

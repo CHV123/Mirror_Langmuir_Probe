@@ -1,4 +1,4 @@
-set display_name {Set Voltage}
+set display_name {Current Response}
 
 set core [ipx::current_core]
 

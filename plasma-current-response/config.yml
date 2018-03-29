@@ -1,5 +1,5 @@
 ---
-name: mirror-langmuir-probe
+name: plasma-current-response
 board: boards/red-pitaya
 version: 0.1.1
 
@@ -9,6 +9,7 @@ cores:
   - fpga/cores/axi_ctl_register_v1_0
   - fpga/cores/axi_sts_register_v1_0
   - fpga/cores/dna_reader_v1_0
+  - instruments/plasma-current-response/cores/current_response_v1_0
 
 memory:
   - name: control
@@ -27,15 +28,13 @@ memory:
 control_registers:
   - led
   - trigger
-  - voltage1
-  - voltage2
-  - voltage3
+  - Isat
+  - Vfloating
+  - Temperture
 
 status_registers:
   - adc[n_adc]
-  - temperature
-  - Isaturation
-  - Edensity
+  - Current
 
 parameters:
   fclk0: 166666667
@@ -49,7 +48,7 @@ xdc:
   - boards/red-pitaya/config/clocks.xdc
 
 drivers:
-  - ./MLP.hpp
+  - ./PCS.hpp
   - server/drivers/common.hpp
 
 # web:

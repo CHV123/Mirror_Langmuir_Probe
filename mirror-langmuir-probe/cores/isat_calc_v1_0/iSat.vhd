@@ -13,31 +13,38 @@ use ieee.numeric_std.all;
 
 entity iSatCalc is
 
-  generic (
-    bram_lat : integer := 2;
-    div_lat  : integer := 18);          -- latency of divider
   port (
-    adc_clk  : in std_logic;            -- adc input clock
-    vFloat   : in signed(13 downto 0);  -- Floating Voltage input
-    temp     : in signed(13 downto 0);  -- Temperature input
-    outBRAM  : in unsigned(13 downto 0);         -- data returned by BRAM
-    Mult1    : in signed(31 downto 0);  -- data returned by the division multiplexer
-    Mult1Ind : in std_logic_vector(3 downto 0);  -- index of data returned by division multiplexer
-    volt_in  : in signed(13 downto 0);  -- Voltage input
-    volt1    : in signed(13 downto 0);  -- Fist bias voltage in cycle
-    clk_en   : in std_logic;            -- Clock Enable to set period start
+    adc_clk : in std_logic;              -- adc input clock
+    vFloat  : in signed(13 downto 0);    -- Floating Voltage input
+    temp    : in signed(13 downto 0);    -- Temperature input
+    outBRAM : in unsigned(13 downto 0);  -- data returned by BRAM
+    volt_in : in signed(13 downto 0);    -- Voltage input
+    volt1   : in signed(13 downto 0);    -- Fist bias voltage in cycle
+    clk_en  : in std_logic;              -- Clock Enable to set period start
 
-
-    dividend : out signed(13 downto 0);   -- Dividend out
-    tUser                 : out unsigned(2 downto 0);  -- tUser signal for divider block
-    divisor : out signed(13 downto 0);   -- Divisor out
-    iSat                  : out signed(13 downto 0);   -- Saturation current
-    Prop                  : out std_logic);  -- valid to propagate to float and temp block
-
-
+    iSat : out signed(13 downto 0);     -- Saturation current
+    Prop : out std_logic);  -- valid to propagate to float and temp block
+    
 end entity iSatCalc;
 
 architecture Behavioral of iSatCalc is
+
+  -- Divider generator core entity instantiantion
+  ------------------- Divider core
+  component div_gen_0
+    port (
+      aclk : IN STD_LOGIC;
+      s_axis_divisor_tvalid : IN STD_LOGIC;
+        s_axis_divisor_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        s_axis_dividend_tvalid : IN STD_LOGIC;
+        s_axis_dividend_tuser : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+        s_axis_dividend_tdata : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+        m_axis_dout_tvalid : OUT STD_LOGIC;
+        m_axis_dout_tuser : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+        m_axis_dout_tdata : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+      );
+  end component;
+  -- Divider core ------------------
 
   signal exp_count : integer range 0 to 31 := 0;
   signal exp_en    : std_logic             := '0';
@@ -50,11 +57,35 @@ architecture Behavioral of iSatCalc is
                                                     -- to wait for the bram return
   signal storeSig  : signed(13 downto 0)   := (others => '0');
 
+  -- Divider signals--------------------------------------
+  -- Input
+  signal divisor        : std_logic_vector(15 downto 0)           := (others => '0');
+  signal dividend       : std_logic_vector(15 downto 0)           := (others => '0');
+  signal tvalid         : std_logic                     := '1';
+  signal tuser          : std_logic_vector(2 downto 0)  := (others => '0');
+  -- Output
+  signal divider_dout   : std_logic_vector(31 downto 0) := (others => '0');
+  signal divider_tvalid : std_logic                     := '0';
+  signal divider_tuser  : std_logic_vector(2 downto 0)  := (others => '0');
+
 begin  -- architecture Behavioral
 
-  index   <= unsigned(Mult1Ind(2 downto 1));
-  div0    <= Mult1Ind(0);
-  tot_lat <= bram_lat + div_lat;
+  index <= unsigned(divider_tuser);
+  
+  ------------------ Divider core
+  Divider_core : div_gen_0
+    port map (
+      aclk                   => adc_clk,
+      s_axis_divisor_tvalid  => tvalid,
+      s_axis_divisor_tdata   => divisor,
+      s_axis_dividend_tvalid => tvalid,
+      s_axis_dividend_tdata  => dividend,
+      s_axis_dividend_tuser  => tuser,
+      m_axis_dout_tvalid     => divider_tvalid,
+      m_axis_dout_tdata      => divider_dout,
+      m_axis_dout_tuser      => divider_tuser
+      );
+  -- Divider core ---------------
 
   -- purpose: Process to calculate Saturation current
   -- type   : combinational
@@ -64,7 +95,7 @@ begin  -- architecture Behavioral
   begin
     if rising_edge(adc_clk) then
       if index = to_unsigned(2, 3) then
-        iSat <= Mult1;
+        iSat <= signed(divider_dout(31 downto 16));
       end if;
     end if;
   end process iSat_proc;
@@ -77,21 +108,26 @@ begin  -- architecture Behavioral
   begin  -- process diff_proc
     if rising_edge(adc_clk) then
       if clk_en = '1' then
-        divisor  <= volt1 - vFloat;
-        dividend <= temp;
-        tUser    <= to_unsigned(1, tUser'length);
+        divisor  <= std_logic_vector(volt1 - vFloat);
+        dividend <= std_logic_vector(temp);
+        tUser    <= std_logic_vector(to_unsigned(1, tUser'length));
         diff_set <= '1';
         storeSig <= volt_in;
-      elsif index = to_unsigned(1, 3) then
+      else
+        diff_set <= '0';
+      end if;
+      if index = to_unsigned(1, 3) then
         waitBRAM <= '1';
-      elsif exp_en = '1' then
-        divisor  <= storeSig;
-        dividend <= outBRAM;
-        tUser    <= to_unsigned(2, tUser'length);
       else
         waitBRAM <= '0';
-        diff_set <= '0';
-        tUser    <= to_unsigned(3, tUser'length);
+      end if;
+      if exp_en = '1' then
+        divisor  <= std_logic_vector(storeSig);
+        dividend <= std_logic_vector(outBRAM);
+        tUser    <= std_logic_vector(to_unsigned(2, tUser'length));
+      end if;
+      if clk_en = '0' and exp_en = '0' then
+        tUser <= std_logic_vector(to_unsigned(0, tUser'length));
       end if;
     end if;
   end process div_proc;
@@ -103,13 +139,15 @@ begin  -- architecture Behavioral
   collect_proc : process (adc_clk) is
   begin  -- process collect_proc
     if rising_edge(adc_clk) then
-      if waitBRAM <= '1' then
+      if waitBRAM = '1' then
         exp_count <= exp_count + 1;
-      elsif exp_count = 1 then
+      end if;
+      if exp_count = 1 then
         exp_count <= exp_count + 1;
       elsif exp_count = 2 then
         exp_en <= '1';
-      else
+      end if;
+      if exp_en = '1' then
         exp_count <= 0;
         exp_en    <= '0';
       end if;

@@ -107,19 +107,22 @@ begin  -- architecture behaviour
     volt_in <= volt_in + 1;
   end process voltInput;
 
-  ---- purpose: Process to simulate the divider core
-  ---- type   : combinational
-  ---- inputs : adc_clk
-  ---- outputs: Mult1, Mult1Ind
-  --divStim_proc: process (adc_clk) is
-  --begin  -- process divStim_proc
-  --  wait for adc_clk_period/2;
-  --  if adc_clk = '1' then
-  --    if tUser = to_unsigned(0, tUser'length) then
-
-  --    end if;
-  --  end if;
-  --end process divStim_proc;
+  -- purpose: Process to simulate the divider core
+  -- type   : combinational
+  -- inputs : adc_clk
+  -- outputs: Mult1, Mult1Ind
+  divStim_proc: process
+  begin  -- process divStim_proc
+    wait for adc_clk_period/2;
+    if adc_clk = '1' then
+      if tUser = to_unsigned(1, tUser'length) then
+        wait for adc_clk_period*18;
+        Mult1Ind <= "0010";
+        wait for adc_clk_period;
+        Mult1Ind <= "0000";
+      end if;
+    end if;
+  end process divStim_proc;
 
   -- Stimulus process
   stim_proc : process

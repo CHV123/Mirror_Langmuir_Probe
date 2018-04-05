@@ -1,0 +1,41 @@
+-------------------------------------------------------------------------------
+-- Module to set 3 different voltages levels for inital MLP demonstration
+-- Started on March 26th by Charlie Vincent
+--
+-- Adjust variable is to lengthen period to a number that is indivisible by three
+-- First two levels will be of length period, third level will be of length
+-- period + adjust
+-------------------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+entity TempCalc is
+
+  port (
+    adc_clk : in std_logic;             -- adc input clock
+    vFloat  : in signed(13 downto 0);   -- Floating voltage input
+    iSat    : in signed(13 downto 0);   -- Saturation current input
+    volt_in : in signed(13 downto 0);   -- input voltage
+
+    temp : out signed(13 downto 0)  -- calculated temperature
+    );
+
+end entity TempCalc;
+
+architecture Behavioral of TempCalc is
+begin  -- architecture Behavioral
+
+  -- purpose: Calculate output temperature
+  -- type   : combinational
+  -- inputs : adc
+  -- outputs: temperature
+  temp_proc: process (adc_clk) is
+  begin  -- process temp_proc
+    if rising_edge(adc_clk) then
+      temp <= vFloat;
+    end if;
+  end process temp_proc;
+
+end architecture Behavioral;

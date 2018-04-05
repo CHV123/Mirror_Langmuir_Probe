@@ -14,17 +14,17 @@ use ieee.numeric_std.all;
 entity SetVolts is
 
   generic (
-    period : integer := 25;             -- level duration
+    period : integer := 40;             -- level duration
     adjust : integer := 0               -- adjustment for non-divisible periods
     );
   port (
-    adc_clk   : in std_logic;           -- adc input clock
-    NegBias   : in signed(13 downto 0);  -- Adjustment for negative bias
-    PosBias   : in signed(13 downto 0);  -- Adjustment for positive bias
-    period_in : in unsigned(31 downto 0);
-    temp      : in signed(13 downto 0);  -- Temperature sets the voltage bias
+    adc_clk : in std_logic;             -- adc input clock
+    volt1   : in signed(31 downto 0);   -- level for voltage 1
+    volt2   : in signed(31 downto 0);   -- level for voltage 2
+    volt3   : in signed(31 downto 0);   -- level for voltage 3
+    period_in  : in unsigned(31 downto 0);  
 
-    volt_out   : out signed(13 downto 0);
+    volt_out : out signed(13 downto 0);
     period_out : out unsigned(31 downto 0);
     adjust_out : out unsigned(31 downto 0)
     );
@@ -50,10 +50,10 @@ begin  -- architecture Behavioral
     variable div4 : integer := 0;
   begin
     if rising_edge(adc_clk) then
-      if to_integer(period_in) > period*3 then
-        div8        := to_integer(shift_right(period_in, 3));
-        div4        := to_integer(shift_right(period_in, 2));
-        div3        := to_integer(to_unsigned(div4 + div8, 32));
+      if period_in > period then
+        div8 := to_integer(shift_right(period_in, 3));
+        div4 := to_integer(shift_right(period_in, 2));
+        div3 := to_integer(to_unsigned(div4 + div8, 32));
         period_mask <= div3;
         adjust_mask <= div3 - div4;
       else
@@ -98,18 +98,15 @@ begin  -- architecture Behavioral
 
   -- Setting the output to various voltage levels
   set_proc : process(adc_clk)
-    variable levelMask : signed(27 downto 0) := (others => '0');
   begin
     if rising_edge(adc_clk) then
       case level is
         when 0 =>
-          levelMask := NegBias * temp;
-          output <= levelMask(13 downto 0);
+          output <= volt1(13 downto 0);
         when 1 =>
-          levelMask := PosBias * temp;
-          output <= levelMask(13 downto 0);
+          output <= volt2(13 downto 0);
         when 2 =>
-          output <= (others => '0');
+          output <= volt3(13 downto 0);
         when others =>
           output <= (others => '0');
       end case;

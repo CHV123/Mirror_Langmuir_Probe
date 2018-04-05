@@ -10,7 +10,10 @@ cores:
   - fpga/cores/axi_sts_register_v1_0
   - fpga/cores/dna_reader_v1_0
   - instruments/mirror-langmuir-probe/cores/set_voltage_v1_0
-
+  - instruments/mirror-langmuir-probe/cores/isat_calc_v1_0
+  - instruments/mirror-langmuir-probe/cores/temp_calc_v1_0
+  - instruments/mirror-langmuir-probe/cores/vfloat_calc_v1_0
+  
 memory:
   - name: control
     offset: '0x60000000'
@@ -28,15 +31,14 @@ memory:
 control_registers:
   - led
   - trigger
-  - voltage1
-  - voltage2
-  - voltage3
+  - NegativeBias
+  - PositiveBias
 
 status_registers:
   - adc[n_adc]
-  - temperature
+  - Temperature
   - Isaturation
-  - Edensity
+  - vFloat
 
 parameters:
   fclk0: 166666667

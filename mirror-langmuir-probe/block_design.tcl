@@ -62,6 +62,145 @@ set memory_segment  [get_bd_addr_segs /${::ps_name}/Data/SEG_adc_axis_fifo_Mem0]
 set_property offset [get_memory_offset adc_fifo] $memory_segment
 set_property range  [get_memory_range adc_fifo]  $memory_segment
 
+### THE ISAT BLOCK HIERARCHY ###############################################################################
+#############################################################################################################
+# Adding the "Calculate Isat" ip and making the appropriate connections
+create_bd_cell -type ip -vlnv PSFC:user:isat_calc:1.0 isat_calc_0
+connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins isat_calc_0/adc_clk]
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 iSat_concat
+set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells iSat_concat]
+connect_bd_net [get_bd_pins iSat_concat/dout] [get_bd_pins sts/Isaturation]
+connect_bd_net [get_bd_pins isat_calc_0/iSat] [get_bd_pins iSat_concat/In0]
+
+# Creating and setting up divider core for iSat block
+create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0
+
+set_property -dict [list CONFIG.dividend_and_quotient_width {14} CONFIG.dividend_has_tuser {true}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.divisor_width {14} CONFIG.divide_by_zero_detect {false}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.fractional_width {14} CONFIG.latency {18} CONFIG.dividend_tuser_width {2}] [get_bd_cells div_gen_0]
+
+connect_bd_net [get_bd_pins div_gen_0/aclk] [get_bd_pins adc_dac/adc_clk]
+
+connect_bd_intf_net [get_bd_intf_pins isat_calc_0/divisor] [get_bd_intf_pins div_gen_0/S_AXIS_DIVISOR]
+connect_bd_intf_net [get_bd_intf_pins div_gen_0/M_AXIS_DOUT] [get_bd_intf_pins isat_calc_0/divider]
+connect_bd_intf_net [get_bd_intf_pins isat_calc_0/dividend] [get_bd_intf_pins div_gen_0/S_AXIS_DIVIDEND]
+
+# Creating the BRAM for the Isat block
+create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 iSat_SPR_0
+
+set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.use_bram_block {Stand_Alone}] [get_bd_cells iSat_SPR_0]
+set_property -dict [list CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {16384} CONFIG.Read_Width_A {14}] [get_bd_cells iSat_SPR_0]
+set_property -dict [list CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {14}] [get_bd_cells iSat_SPR_0]
+set_property -dict [list CONFIG.Read_Width_B {14} CONFIG.Register_PortA_Output_of_Memory_Primitives {false}] [get_bd_cells iSat_SPR_0]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charliev/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/base_coe.coe}] [get_bd_cells iSat_SPR_0]
+set_property -dict [list CONFIG.Fill_Remaining_Memory_Locations {true} CONFIG.Use_RSTA_Pin {false}] [get_bd_cells iSat_SPR_0]
+
+# Connect up the block to iSat
+connect_bd_net [get_bd_pins isat_calc_0/BRAM_addr] [get_bd_pins iSat_SPR_0/addra]
+connect_bd_net [get_bd_pins iSat_SPR_0/douta] [get_bd_pins isat_calc_0/BRAMret]
+
+# Grouping the ISat cells into a hierarchy
+group_bd_cells iSat_calc_hier [get_bd_cells isat_calc_0] [get_bd_cells iSat_SPR_0] [get_bd_cells div_gen_0]
+
+###############################################################################################################
+
+#############################################################################################################
+# Adding the "Calculate Vfloat" ip and making the appropriate connections
+create_bd_cell -type ip -vlnv PSFC:user:vfloat_calc:1.0 vfloat_calc_0
+connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins vfloat_calc_0/adc_clk]
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 vfloat_concat
+set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells vfloat_concat]
+connect_bd_net [get_bd_pins vfloat_concat/dout] [get_bd_pins sts/vFloat]
+connect_bd_net [get_bd_pins vfloat_calc_0/vfloat] [get_bd_pins vfloat_concat/In0]
+
+# Creating and setting up divider core for vfloat block
+create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0
+
+set_property -dict [list CONFIG.dividend_and_quotient_width {14} CONFIG.dividend_has_tuser {true}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.divisor_width {14} CONFIG.divide_by_zero_detect {false}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.fractional_width {14} CONFIG.latency {18} CONFIG.dividend_tuser_width {2}] [get_bd_cells div_gen_0]
+
+connect_bd_net [get_bd_pins div_gen_0/aclk] [get_bd_pins adc_dac/adc_clk]
+
+connect_bd_intf_net [get_bd_intf_pins vfloat_calc_0/divisor] [get_bd_intf_pins div_gen_0/S_AXIS_DIVISOR]
+connect_bd_intf_net [get_bd_intf_pins div_gen_0/M_AXIS_DOUT] [get_bd_intf_pins vfloat_calc_0/divider]
+connect_bd_intf_net [get_bd_intf_pins vfloat_calc_0/dividend] [get_bd_intf_pins div_gen_0/S_AXIS_DIVIDEND]
+
+# Creating the BRAM for the Vfloat block
+create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 vfloat_SPR_0
+
+set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.use_bram_block {Stand_Alone}] [get_bd_cells vfloat_SPR_0]
+set_property -dict [list CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {16384} CONFIG.Read_Width_A {14}] [get_bd_cells vfloat_SPR_0]
+set_property -dict [list CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {14}] [get_bd_cells vfloat_SPR_0]
+set_property -dict [list CONFIG.Read_Width_B {14} CONFIG.Register_PortA_Output_of_Memory_Primitives {false}] [get_bd_cells vfloat_SPR_0]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charliev/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/base_coe.coe}] [get_bd_cells vfloat_SPR_0]
+set_property -dict [list CONFIG.Fill_Remaining_Memory_Locations {true} CONFIG.Use_RSTA_Pin {false}] [get_bd_cells vfloat_SPR_0]
+
+# Connect up the block to vfloat
+connect_bd_net [get_bd_pins vfloat_calc_0/BRAM_addr] [get_bd_pins vfloat_SPR_0/addra]
+connect_bd_net [get_bd_pins vfloat_SPR_0/douta] [get_bd_pins vfloat_calc_0/BRAMret]
+
+# Grouping the Vfloat cells into a hierarchy
+group_bd_cells vfloat_calc_hier [get_bd_cells vfloat_calc_0] [get_bd_cells vfloat_SPR_0] [get_bd_cells div_gen_0]
+###############################################################################################################
+
+#############################################################################################################
+# Adding the "Calculate Temp" ip and making the appropriate connections
+create_bd_cell -type ip -vlnv PSFC:user:temp_calc:1.0 temp_calc_0
+connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins temp_calc_0/adc_clk]
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 temp_concat
+set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells temp_concat]
+connect_bd_net [get_bd_pins temp_concat/dout] [get_bd_pins sts/Temperature]
+connect_bd_net [get_bd_pins temp_calc_0/temp] [get_bd_pins temp_concat/In0]
+
+# Creating and setting up divider core for temp block
+create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0
+
+set_property -dict [list CONFIG.dividend_and_quotient_width {14} CONFIG.dividend_has_tuser {true}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.divisor_width {14} CONFIG.divide_by_zero_detect {false}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.fractional_width {14} CONFIG.latency {18} CONFIG.dividend_tuser_width {2}] [get_bd_cells div_gen_0]
+
+connect_bd_net [get_bd_pins div_gen_0/aclk] [get_bd_pins adc_dac/adc_clk]
+
+connect_bd_intf_net [get_bd_intf_pins temp_calc_0/divisor] [get_bd_intf_pins div_gen_0/S_AXIS_DIVISOR]
+connect_bd_intf_net [get_bd_intf_pins div_gen_0/M_AXIS_DOUT] [get_bd_intf_pins temp_calc_0/divider]
+connect_bd_intf_net [get_bd_intf_pins temp_calc_0/dividend] [get_bd_intf_pins div_gen_0/S_AXIS_DIVIDEND]
+
+# Creating the BRAM for the Temp block
+create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 temp_SPR_0
+
+set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.use_bram_block {Stand_Alone}] [get_bd_cells temp_SPR_0]
+set_property -dict [list CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {16384} CONFIG.Read_Width_A {14}] [get_bd_cells temp_SPR_0]
+set_property -dict [list CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {14}] [get_bd_cells temp_SPR_0]
+set_property -dict [list CONFIG.Read_Width_B {14} CONFIG.Register_PortA_Output_of_Memory_Primitives {false}] [get_bd_cells temp_SPR_0]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charliev/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/base_coe.coe}] [get_bd_cells temp_SPR_0]
+set_property -dict [list CONFIG.Fill_Remaining_Memory_Locations {true} CONFIG.Use_RSTA_Pin {false}] [get_bd_cells temp_SPR_0]
+
+# Connect up the block to temp
+connect_bd_net [get_bd_pins temp_calc_0/BRAM_addr] [get_bd_pins temp_SPR_0/addra]
+connect_bd_net [get_bd_pins temp_SPR_0/douta] [get_bd_pins temp_calc_0/BRAMret]
+
+# Grouping the Temp cells into a hierarchy
+group_bd_cells temp_calc_hier [get_bd_cells temp_calc_0] [get_bd_cells temp_SPR_0] [get_bd_cells div_gen_0]
+###############################################################################################################
+
+###############################################################################################################
+# Making connections between calculation modules
+connect_bd_net [get_bd_pins iSat_calc_hier/isat_calc_0/iSat] [get_bd_pins temp_calc_hier/temp_calc_0/iSat]
+connect_bd_net [get_bd_pins temp_calc_hier/temp_calc_0/Temp] [get_bd_pins iSat_calc_hier/isat_calc_0/temp]
+connect_bd_net [get_bd_pins vfloat_calc_hier/vfloat_calc_0/vFloat] [get_bd_pins iSat_calc_hier/isat_calc_0/vFloat]
+connect_bd_net [get_bd_pins iSat_calc_hier/isat_calc_0/iSat] [get_bd_pins vfloat_calc_hier/vfloat_calc_0/iSat]
+connect_bd_net [get_bd_pins vfloat_calc_hier/vfloat_calc_0/vFloat] [get_bd_pins temp_calc_hier/temp_calc_0/vFloat]
+connect_bd_net [get_bd_pins vfloat_calc_hier/vfloat_calc_0/Temp] [get_bd_pins temp_calc_hier/temp_calc_0/Temp]
+
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins iSat_calc_hier/isat_calc_0/volt_in]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins temp_calc_hier/temp_calc_0/volt_in]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins vfloat_calc_hier/vfloat_calc_0/volt_in]
+###############################################################################################################
+
 #############################################################################################################
 # Adding the "Set Voltage" ip and making the appropriate connections
 create_bd_cell -type ip -vlnv PSFC:user:set_voltage:1.0 set_voltage_0
@@ -81,39 +220,29 @@ connect_bd_net [get_bd_pins set_voltage_0/volt_out] [get_bd_pins slice_volt_out_
 connect_bd_net [get_bd_ports led_o] [get_bd_pins slice_volt_out_led_13_6/Dout]
 ###########################################################################################################
 
-#############################################################################################################
-# Adding the "Calculate Isat" ip and making the appropriate connections
-create_bd_cell -type ip -vlnv PSFC:user:isat_calc:1.0 isat_calc_0
-connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins isat_calc_0/adc_clk]
+group_bd_cells MLP_calculations [get_bd_cells set_voltage_0] [get_bd_cells iSat_calc_hier] [get_bd_cells vfloat_calc_hier] [get_bd_cells temp_calc_hier]; #Making one big MLP block
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 iSat_concat
-set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells iSat_concat]
-connect_bd_net [get_bd_pins iSat_concat/dout] [get_bd_pins sts/Isaturation]
-connect_bd_net [get_bd_pins isat_calc_0/iSat] [get_bd_pins iSat_concat/In0]
-###########################################################################################################
+# Making sure clocks are synchronous
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/iSat_calc_hier/isat_calc_0/divider]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/iSat_calc_hier/isat_calc_0/divider]
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/temp_calc_hier/temp_calc_0/divider]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/temp_calc_hier/temp_calc_0/divider]
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/vfloat_calc_hier/vfloat_calc_0/divider]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/vfloat_calc_hier/vfloat_calc_0/divider]
 
-#############################################################################################################
-# Adding the "Calculate Temperature" ip and making the appropriate connections
-create_bd_cell -type ip -vlnv PSFC:user:temp_calc:1.0 temp_calc_0
-connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins temp_calc_0/adc_clk]
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/iSat_calc_hier/isat_calc_0/dividend]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/iSat_calc_hier/isat_calc_0/dividend]
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/temp_calc_hier/temp_calc_0/dividend]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/temp_calc_hier/temp_calc_0/dividend]
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/vfloat_calc_hier/vfloat_calc_0/dividend]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/vfloat_calc_hier/vfloat_calc_0/dividend]
 
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 temp_concat
-set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells temp_concat]
-connect_bd_net [get_bd_pins temp_concat/dout] [get_bd_pins sts/Temperature]
-connect_bd_net [get_bd_pins temp_calc_0/temp] [get_bd_pins temp_concat/In0]
-###########################################################################################################
-
-#############################################################################################################
-# Adding the "Calculate Floating potential" ip and making the appropriate connections
-create_bd_cell -type ip -vlnv PSFC:user:vfloat_calc:1.0 vfloat_calc_0
-connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins vfloat_calc_0/adc_clk]
-
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 vfloat_concat
-set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells vfloat_concat]
-connect_bd_net [get_bd_pins vfloat_concat/dout] [get_bd_pins sts/vFloat]
-connect_bd_net [get_bd_pins vfloat_calc_0/vFloat] [get_bd_pins vfloat_concat/In0]
-###########################################################################################################
-
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/iSat_calc_hier/isat_calc_0/divisor]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/iSat_calc_hier/isat_calc_0/divisor]
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/temp_calc_hier/temp_calc_0/divisor]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/temp_calc_hier/temp_calc_0/divisor]
+set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins /MLP_calculations/vfloat_calc_hier/vfloat_calc_0/divisor]
+set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins /MLP_calculations/vfloat_calc_hier/vfloat_calc_0/divisor]
 ##########################################################################################################
 # Constant block to fill out module return values
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 module_const
@@ -123,38 +252,3 @@ connect_bd_net [get_bd_pins module_const/dout] [get_bd_pins iSat_concat/In1]
 connect_bd_net [get_bd_pins module_const/dout] [get_bd_pins temp_concat/In1]
 connect_bd_net [get_bd_pins module_const/dout] [get_bd_pins vfloat_concat/In1]
 ###########################################################################################################
-
-###########################################################################################################
-# Creating and setting up divider block
-create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0
-
-set_property -dict [list CONFIG.dividend_and_quotient_width {14} CONFIG.dividend_has_tuser {true}] [get_bd_cells div_gen_0]
-set_property -dict [list CONFIG.divisor_width {14} CONFIG.divide_by_zero_detect {true}] [get_bd_cells div_gen_0]
-set_property -dict [list CONFIG.fractional_width {14} CONFIG.latency {18} CONFIG.dividend_tuser_width {3}] [get_bd_cells div_gen_0]
-
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 div_const
-set_property -dict [list CONFIG.CONST_WIDTH {18} CONFIG.CONST_VAL {0}] [get_bd_cells div_const]
-
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 divisor_concat
-set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells divisor_concat]
-
-connect_bd_net [get_bd_pins div_const/dout] [get_bd_pins divisor_concat/In1]
-connect_bd_net [get_bd_pins divisor_concat/dout] [get_bd_pins div_gen_0/s_axis_divisor_tdata]
-connect_bd_net [get_bd_pins isat_calc_0/divisor] [get_bd_pins divisor_concat/In0]
-
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 dividend_concat
-set_property -dict [list CONFIG.IN0_WIDTH {14} CONFIG.IN1_WIDTH {18}] [get_bd_cells divisor_concat]
-
-connect_bd_net [get_bd_pins div_const/dout] [get_bd_pins dividend_concat/In1]
-connect_bd_net [get_bd_pins dividend_concat/dout] [get_bd_pins div_gen_0/s_axis_dividend_tdata]
-connect_bd_net [get_bd_pins isat_calc_0/dividend] [get_bd_pins dividend_concat/In0]
-
-connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tdata] [get_bd_pins isat_calc_0/Mult1]
-connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tuser] [get_bd_pins isat_calc_0/Mult1Ind]
-###########################################################################################################
-
-connect_bd_net [get_bd_pins temp_calc_0/temp] [get_bd_pins isat_calc_0/temp]
-connect_bd_net [get_bd_pins vfloat_calc_0/vFloat] [get_bd_pins isat_calc_0/vFloat]
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins isat_calc_0/volt_in]
-
-

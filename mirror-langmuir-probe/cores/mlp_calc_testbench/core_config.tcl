@@ -1,4 +1,4 @@
-set display_name {Divider Input Multiplex}
+set display_name {MLP block simulation}
 
 set core [ipx::current_core]
 

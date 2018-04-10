@@ -31,8 +31,7 @@ memory:
 control_registers:
   - led
   - trigger
-  - NegativeBias
-  - PositiveBias
+  - Period
 
 status_registers:
   - adc[n_adc]

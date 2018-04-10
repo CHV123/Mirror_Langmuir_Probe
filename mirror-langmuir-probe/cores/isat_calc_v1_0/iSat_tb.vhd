@@ -63,7 +63,7 @@ architecture test_bench of tb_iSat is
     PORT (
       clka : IN STD_LOGIC;
       wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
-      addra : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+      addra : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
       dina : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
       douta : OUT STD_LOGIC_VECTOR(13 DOWNTO 0)
     );
@@ -102,7 +102,7 @@ architecture test_bench of tb_iSat is
 
   -- Signals for blk_mem_gen_0 ------------------------------------------------------------------
   -- input signals
-  signal addra : std_logic_vector(3 downto 0) := (others => '0');
+  signal addra : std_logic_vector(13 downto 0) := (others => '0');
   signal wea : std_logic_vector(0 downto 0) := (others => '0');
   signal dina : std_logic_vector(13 downto 0) := (others => '0');
   signal douta : std_logic_vector(13 downto 0) := (others => '0');
@@ -163,7 +163,7 @@ begin  -- architecture behaviour
   -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
   BRAMret <= signed(douta);
-  addra <= BRAM_addr(3 downto 0);
+  addra <= BRAM_addr;
   
   -- Clock process definitions
   adc_clk_process : process

@@ -17,13 +17,10 @@ architecture test_bench of tb_iSat is
   ----------------------------------------------------------------------------------------------
   -- Instantiating the iSat module
   component iSatCalc is
-    generic (
-      mapBRAMco : integer := 1;
-      mapBRAMad : integer := 0);
     port (
       adc_clk       : in std_logic;     -- adc input clock
-      vFloat        : in signed(13 downto 0);  -- Floating Voltage input
-      temp          : in signed(13 downto 0);  -- Temperature input
+      vFloat        : in signed(15 downto 0);  -- Floating Voltage input
+      Temp          : in signed(15 downto 0);  -- Temperature input
       BRAMret       : in signed(13 downto 0);  -- data returned by BRAM
       volt_in       : in signed(13 downto 0);  -- Voltage input
       volt1         : in signed(13 downto 0);  -- Fist bias voltage in cycle
@@ -37,7 +34,7 @@ architecture test_bench of tb_iSat is
       dividend_tvalid : out std_logic;
       dividend_tuser  : out std_logic_vector(1 downto 0);
       BRAM_addr       : out std_logic_vector(13 downto 0);  -- BRAM address out
-      iSat            : out signed(13 downto 0);  -- Saturation current
+      iSat            : out signed(15 downto 0);  -- Saturation current
       data_valid      : out std_logic);  -- valid to propagate to float and temp block
   end component iSatCalc;
   --------------------------------------------------------------------------------------------
@@ -72,17 +69,14 @@ architecture test_bench of tb_iSat is
   
   ----------------------------------------------------------------------------------------------------
   -- Signals for iSatCalc module
-  -- parameters
-  constant mapBRAMco : integer := 1;
-  constant mapBRAMad : integer := 0;
 
   -- input signals
   signal adc_clk       : std_logic                     := '0';
-  signal vFloat        : signed(13 downto 0)           := to_signed(2, 14);  -- Floating Voltage input
-  signal temp          : signed(13 downto 0)           := to_signed(5, 14);  -- Temperature input
+  signal vFloat        : signed(15 downto 0)           := to_signed(-3820, 16);  -- Floating Voltage input
+  signal Temp          : signed(15 downto 0)           := to_signed(500, 16);  -- Temperature input
   signal BRAMret       : signed(13 downto 0)           := to_signed(0, 14);  -- data returned by BRAM
-  signal volt_in       : signed(13 downto 0)           := (others => '0');  -- Voltage input
-  signal volt1         : signed(13 downto 0)           := to_signed(14, 14);  -- Fist bias voltage in cycle
+  signal volt_in       : signed(13 downto 0)           := to_signed(1, 14);  -- Voltage input
+  signal volt1         : signed(13 downto 0)           := to_signed(-4000, 14);  -- Fist bias voltage in cycle
   signal clk_en        : std_logic                     := '0';  -- Clock Enable to set period start
   signal divider_tdata : std_logic_vector(31 downto 0) := (others => '0');
   signal divider_tuser : std_logic_vector(1 downto 0)  := (others => '0');
@@ -95,7 +89,7 @@ architecture test_bench of tb_iSat is
   signal dividend_tvalid : std_logic                     := '0';
   signal dividend_tuser  : std_logic_vector(1 downto 0)  := (others => '0');
   signal BRAM_addr       : std_logic_vector(13 downto 0) := (others => '0');
-  signal iSat_out        : signed(13 downto 0)           := (others => '0');  -- Saturation current
+  signal iSat_out        : signed(15 downto 0)           := (others => '0');  -- Saturation current
   signal data_valid      : std_logic                     := '0';  -- valid to propagate to float and temp block
   -- Signals for iSatCalc Module
   ---------------------------------------------------------------------------------------------------
@@ -174,6 +168,16 @@ begin  -- architecture behaviour
     wait for adc_clk_period/2;
   end process;
 
+  -- purpose: Process to fluctuate temperature
+  -- type   : combinational
+  -- inputs : 
+  -- outputs: Temp
+  temp_proc: process is
+  begin  -- process temp_proc
+    wait for adc_clk_period*50;
+    temp <= temp + to_signed(200, 14);
+  end process temp_proc;
+
   -- purpose: Stimulation process to provide voltage input
   -- type   : combinational
   -- inputs : adc_clk
@@ -181,7 +185,7 @@ begin  -- architecture behaviour
   voltInput : process
   begin  -- process voltInput
     wait for adc_clk_period;
-    volt_in <= volt_in + 1;
+    volt_in <= volt_in + 200;
   end process voltInput;
 
   -- Stimulus process
@@ -192,7 +196,7 @@ begin  -- architecture behaviour
     if counter = 0 then
       clk_en  <= '1';
       counter := counter + 1;
-    elsif counter > 0 and counter < 124 then
+    elsif counter > 0 and counter < 45 then
       clk_en  <= '0';
       counter := counter + 1;
     else

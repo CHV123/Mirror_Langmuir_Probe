@@ -14,426 +14,61 @@ end entity tb_MLP;
 
 architecture test_bench of tb_MLP is
 
-  -----------------------------------------------------------------------------
-  -- Instantiating the SetVolts module
-  component SetVolts is
-    generic (
-      period  : integer := 25;		-- level duration
-      negBias : integer := -3;
-      posBias : integer := 1
-      );
+  component MLP_modules is
     port (
-      adc_clk	 : in std_logic;	-- adc input clock
-      period_in	 : in unsigned(31 downto 0);
-      Temp	 : in signed(13 downto 0);  -- Temperature sets the voltage bias
-      Temp_valid : in std_logic;
+      clk_100MHz     : in  std_logic;
+      input_voltage  : in  std_logic_vector(13 downto 0);
+      output_voltage : out std_logic_vector(13 downto 0);
+      period         : in  std_logic_vector(31 downto 0);
+      reset_rtl_0    : in  std_logic);
+  end component MLP_modules;
 
-      volt_out	: out signed(13 downto 0);
-      iSat_en	: out std_logic;
-      vFloat_en : out std_logic;
-      Temp_en	: out std_logic;
-      volt1	: out signed(13 downto 0);
-      volt2	: out signed(13 downto 0)
-      );
-  end component SetVolts;
-  -----------------------------------------------------------------------------
-
-  ----------------------------------------------------------------------------------------------
-  -- Instantiating the iSat module
-  component iSatCalc is
-    generic (
-      mapBRAMco : integer := 8;
-      mapBRAMad : integer := 0);
-    port (
-      adc_clk	    : in std_logic;	-- adc input clock
-      vFloat	    : in signed(13 downto 0);  -- Floating Voltage input
-      temp	    : in signed(13 downto 0);  -- Temperature input
-      BRAMret	    : in signed(13 downto 0);  -- data returned by BRAM
-      volt_in	    : in signed(13 downto 0);  -- Voltage input
-      volt1	    : in signed(13 downto 0);  -- Fist bias voltage in cycle
-      clk_en	    : in std_logic;	-- Clock Enable to set period start
-      divider_tdata : in std_logic_vector(31 downto 0);
-      divider_tuser : in std_logic_vector(1 downto 0);
-
-      divisor_tdata   : out std_logic_vector(15 downto 0);
-      divisor_tvalid  : out std_logic;
-      dividend_tdata  : out std_logic_vector(15 downto 0);
-      dividend_tvalid : out std_logic;
-      dividend_tuser  : out std_logic_vector(1 downto 0);
-      BRAM_addr	      : out std_logic_vector(13 downto 0);  -- BRAM address out
-      iSat	      : out signed(13 downto 0);  -- Saturation current
-      data_valid      : out std_logic);	 -- valid to propagate to float and temp block
-  end component iSatCalc;
-  --------------------------------------------------------------------------------------------
-
-  --------------------------------------------------------------------------------------------
-  -- Instantiating the Temp module
-  component TempCalc is
-    generic (
-      mapBRAMco : integer := 8;
-      mapBRAMad : integer := 0);
-    port (
-      adc_clk	    : in std_logic;	-- adc input clock
-      vFloat	    : in signed(13 downto 0);  -- Floating Voltage input
-      iSat	    : in signed(13 downto 0);  -- Temperature input
-      BRAMret	    : in signed(13 downto 0);  -- data returned by BRAM
-      volt_in	    : in signed(13 downto 0);  -- Voltage input
-      clk_en	    : in std_logic;	-- Clock Enable to set period start
-      divider_tdata : in std_logic_vector(31 downto 0);
-      divider_tuser : in std_logic_vector(1 downto 0);
-
-      divisor_tdata   : out std_logic_vector(15 downto 0);
-      divisor_tvalid  : out std_logic;
-      dividend_tdata  : out std_logic_vector(15 downto 0);
-      dividend_tvalid : out std_logic;
-      dividend_tuser  : out std_logic_vector(1 downto 0);
-      BRAM_addr	      : out std_logic_vector(13 downto 0);  -- BRAM address out
-      Temp	      : out signed(13 downto 0);  -- Saturation current
-      data_valid      : out std_logic);	 -- valid to propagate to float and temp block
-  end component TempCalc;
-  ----------------------------------------------------------------------------------------------
-
-  --------------------------------------------------------------------------------------------
-  -- Instantiating the vFloat module
-  component vFloatCalc is
-    generic (
-      mapBRAMco : integer := 8;
-      mapBRAMad : integer := 0);
-    port (
-      adc_clk	    : in std_logic;	-- adc input clock
-      iSat	    : in signed(13 downto 0);  -- Floating Voltage input
-      Temp	    : in signed(13 downto 0);  -- Temperature input
-      BRAMret	    : in signed(13 downto 0);  -- data returned by BRAM
-      volt_in	    : in signed(13 downto 0);  -- Voltage input
-      volt2	    : in signed(13 downto 0);  -- Fist bias voltage in cycle
-      clk_en	    : in std_logic;	-- Clock Enable to set period start
-      divider_tdata : in std_logic_vector(31 downto 0);
-      divider_tuser : in std_logic_vector(1 downto 0);
-
-      divisor_tdata   : out std_logic_vector(15 downto 0);
-      divisor_tvalid  : out std_logic;
-      dividend_tdata  : out std_logic_vector(15 downto 0);
-      dividend_tvalid : out std_logic;
-      dividend_tuser  : out std_logic_vector(1 downto 0);
-      BRAM_addr	      : out std_logic_vector(13 downto 0);  -- BRAM address out
-      vFloat	      : out signed(13 downto 0);  -- Saturation current
-      data_valid      : out std_logic);	 -- valid to propagate to float and temp block
-  end component vFloatCalc;
-  ------------------------------------------------------------------------------------------
-
-  ------------------- Divider generator core
-  component div_gen_0
-    port (
-      aclk		     : in  std_logic;
-      s_axis_divisor_tvalid  : in  std_logic;
-      s_axis_divisor_tdata   : in  std_logic_vector(15 downto 0);
-      s_axis_dividend_tvalid : in  std_logic;
-      s_axis_dividend_tuser  : in  std_logic_vector(1 downto 0);
-      s_axis_dividend_tdata  : in  std_logic_vector(15 downto 0);
-      m_axis_dout_tvalid     : out std_logic;
-      m_axis_dout_tuser	     : out std_logic_vector(1 downto 0);
-      m_axis_dout_tdata	     : out std_logic_vector(31 downto 0)
-      );
-  end component;
-  -- Divider generator core ------------------
-
-  ------------- Begin Cut here for COMPONENT Declaration ------ COMP_TAG
-  component blk_mem_gen_0
-    port (
-      clka  : in  std_logic;
-      wea   : in  std_logic_vector(0 downto 0);
-      addra : in  std_logic_vector(13 downto 0);
-      dina  : in  std_logic_vector(13 downto 0);
-      douta : out std_logic_vector(13 downto 0)
-      );
-  end component;
-  -- COMP_TAG_END ------ End COMPONENT Declaration ------------
-
-  ----------------------------------------------------------------------------------------------------
-  -- Generic signals
-  -- parameters
-  constant mapBRAMco : integer := 1;
-  constant mapBRAMad : integer := 0;
-
-  -- Input signals
-  signal adc_clk : std_logic	       := '0';
-  signal volt_in : signed(13 downto 0) := to_signed(1, 14);  -- Voltage input
-
-  -- Output signals
-  signal data_valid_iSat   : std_logic := '0';	-- valid to propagate to float and temp block
-  signal data_valid_Temp   : std_logic := '0';	-- valid to propagate to float and temp block
-  signal data_valid_vFloat : std_logic := '0';	-- valid to propagate to float and temp block
-
-  -----------------------------------------------------------------------------
-  -- SetVolts signal parameters		-- adc input clock
-  signal period_in : unsigned(31 downto 0) := (others => '0');
-
-  signal volt_out  : signed(13 downto 0) := (others => '0');
-  signal iSat_en   : std_logic		 := '0';
-  signal vFloat_en : std_logic		 := '0';
-  signal Temp_en   : std_logic		 := '0';
-  -----------------------------------------------------------------------------
-
-  -- Signals for iSatCalc Module
-  ---------------------------------------------------------------------------------------------------
-
-  -- Divider signals
-  -- inputs
-  signal iSat_divider_tdata    : std_logic_vector(31 downto 0) := (others => '0');
-  signal iSat_divider_tuser    : std_logic_vector(1 downto 0)  := (others => '0');
-  signal iSat_divider_tvalid   : std_logic		       := '0';
-  signal Temp_divider_tdata    : std_logic_vector(31 downto 0) := (others => '0');
-  signal Temp_divider_tuser    : std_logic_vector(1 downto 0)  := (others => '0');
-  signal Temp_divider_tvalid   : std_logic		       := '0';
-  signal vFloat_divider_tdata  : std_logic_vector(31 downto 0) := (others => '0');
-  signal vFloat_divider_tuser  : std_logic_vector(1 downto 0)  := (others => '0');
-  signal vFloat_divider_tvalid : std_logic		       := '0';
-
-  -- outputs
-  signal iSat_divisor_tdata	: std_logic_vector(15 downto 0) := (others => '0');
-  signal iSat_divisor_tvalid	: std_logic			:= '0';
-  signal iSat_dividend_tdata	: std_logic_vector(15 downto 0) := (others => '0');
-  signal iSat_dividend_tvalid	: std_logic			:= '0';
-  signal iSat_dividend_tuser	: std_logic_vector(1 downto 0)	:= (others => '0');
-  signal Temp_divisor_tdata	: std_logic_vector(15 downto 0) := (others => '0');
-  signal Temp_divisor_tvalid	: std_logic			:= '0';
-  signal Temp_dividend_tdata	: std_logic_vector(15 downto 0) := (others => '0');
-  signal Temp_dividend_tvalid	: std_logic			:= '0';
-  signal Temp_dividend_tuser	: std_logic_vector(1 downto 0)	:= (others => '0');
-  signal vFloat_divisor_tdata	: std_logic_vector(15 downto 0) := (others => '0');
-  signal vFloat_divisor_tvalid	: std_logic			:= '0';
-  signal vFloat_dividend_tdata	: std_logic_vector(15 downto 0) := (others => '0');
-  signal vFloat_dividend_tvalid : std_logic			:= '0';
-  signal vFloat_dividend_tuser	: std_logic_vector(1 downto 0)	:= (others => '0');
-
-  -- Input voltage signals
-  signal volt1 : signed(13 downto 0) := to_signed(14, 14);  -- Fist bias voltage in cycle
-  signal volt2 : signed(13 downto 0) := to_signed(14, 14);  -- Fist bias voltage in cycle
-  signal volt3 : signed(13 downto 0) := to_signed(14, 14);  -- Fist bias voltage in cycle
-
-  -- Variable signals
-  signal vFloat_out : signed(13 downto 0) := (others => '0');  -- Floating Voltage input
-  signal Temp_out   : signed(13 downto 0) := to_signed(1000, 14);  -- Temperature input
-  signal iSat_out   : signed(13 downto 0) := (others => '0');  -- iSat signal
-
-  -- BRAM signals
-  -- returned data
-  signal BRAMret_iSat	: signed(13 downto 0)		:= to_signed(0, 14);  -- data returned by BRAM
-  signal BRAMret_vFloat : signed(13 downto 0)		:= to_signed(0, 14);  -- data returned by BRAM
-  signal BRAMret_Temp	: signed(13 downto 0)		:= to_signed(0, 14);  -- data returned by BRAM
-  signal iSatBRAM	: std_logic_vector(13 downto 0) := (others => '0');
-  signal vFloatBRAM	: std_logic_vector(13 downto 0) := (others => '0');
-  signal TempBRAM	: std_logic_vector(13 downto 0) := (others => '0');
-
-  -- output address
-  signal BRAM_addr_iSat	  : std_logic_vector(13 downto 0) := (others => '0');
-  signal BRAM_addr_Temp	  : std_logic_vector(13 downto 0) := (others => '0');
-  signal BRAM_addr_vFloat : std_logic_vector(13 downto 0) := (others => '0');
-
-  -- Signals for blk_mem_gen_0 ------------------------------------------------------------------
-
-  -- input signals
-  signal wea   : std_logic_vector(0 downto 0)  := (others => '0');
-  signal dina  : std_logic_vector(13 downto 0) := (others => '0');
-  signal douta : std_logic_vector(13 downto 0) := (others => '0');
+  signal adc_clk  : std_logic                     := '0';
+  signal volt_in  : std_logic_vector(13 downto 0) := (others => '0');
+  signal volt_out : std_logic_vector(13 downto 0) := (others => '0');
+  signal period   : std_logic_vector(31 downto 0) := (others => '0');
+  signal reset    : std_logic                     := '0';
 
   -- Clock periods
-  constant adc_clk_period : time := 8 ns;
+  constant adc_clk_period : time := 10 ns;
 
   -- Simulation signals
 
 
 begin  -- architecture behaviour
 
-  -----------------------------------------------------------------------------
-  -- Instantiating SetVolts unit
-  uut_SetVolts : SetVolts
+  dut : MLP_modules
     port map (
-      adc_clk	 => adc_clk,
-      period_in	 => period_in,
-      Temp	 => Temp_out,
-      Temp_valid => data_valid_temp,
+      clk_100MHz     => adc_clk,
+      input_voltage  => volt_in,
+      output_voltage => volt_out,
+      period         => period,
+      reset_rtl_0    => reset);
 
-      volt_out	=> volt_out,
-      iSat_en	=> iSat_en,
-      vFloat_en => vFloat_en,
-      Temp_en	=> Temp_en,
-      volt1	=> volt1,
-      volt2	=> volt2);
+    -- purpose: Process for sim clock
+    -- type   : combinational
+    -- inputs : 
+    -- outputs: adc_clk
+    clk_proc : process is
+    begin  -- process clk_proc
+      wait for adc_clk_period/2;
+      adc_clk <= '1';
+      wait for adc_clk_period/2;
+      adc_clk <= '0';
+    end process clk_proc;
 
-  -----------------------------------------------------------------------------
-  --------------------------------------------------
-  -- Instantiating test units
-  uut_iSat : iSatCalc
-    port map (
-      adc_clk	    => adc_clk,
-      vFloat	    => vFloat_out,
-      temp	    => Temp_out,
-      BRAMret	    => BRAMret_iSat,
-      volt_in	    => volt_in,
-      volt1	    => volt1,
-      clk_en	    => iSat_en,
-      divider_tdata => iSat_divider_tdata,
-      divider_tuser => iSat_divider_tuser,
-
-      divisor_tdata   => iSat_divisor_tdata,
-      divisor_tvalid  => iSat_divisor_tvalid,
-      dividend_tdata  => iSat_dividend_tdata,
-      dividend_tvalid => iSat_dividend_tvalid,
-      dividend_tuser  => iSat_dividend_tuser,
-      BRAM_addr	      => BRAM_addr_iSat,
-      iSat	      => iSat_out,
-      data_valid      => data_valid_iSat
-      );
-  --------------------------------------------------------------------------------------------
-  -- Instantiating the vFloat module
-  uut_vfloat : vFloatCalc
-    port map (
-      adc_clk	    => adc_clk,		-- adc input clock
-      iSat	    => iSat_out,
-      Temp	    => Temp_out,
-      BRAMret	    => BRAMret_vFloat,
-      volt_in	    => volt_in,
-      volt2	    => volt2,
-      clk_en	    => vFloat_en,
-      divider_tdata => vFloat_divider_tdata,
-      divider_tuser => vFloat_divider_tuser,
-
-      divisor_tdata   => vFloat_divisor_tdata,
-      divisor_tvalid  => vFloat_divisor_tvalid,
-      dividend_tdata  => vFloat_dividend_tdata,
-      dividend_tvalid => vFloat_dividend_tvalid,
-      dividend_tuser  => vFloat_dividend_tuser,
-      BRAM_addr	      => BRAM_addr_vFloat,
-      vFloat	      => vFloat_out,
-      data_valid      => data_valid_vFloat
-      );
-  ------------------------------------------------------------------------------------------
-
-  --------------------------------------------------------------------------------------------
-  -- Instantiating the vFloat module
-  uut_temp : TempCalc
-    port map (
-      adc_clk	    => adc_clk,		-- adc input clock
-      iSat	    => iSat_out,
-      vFloat	    => vFloat_out,
-      BRAMret	    => BRAMret_Temp,
-      volt_in	    => volt_in,
-      clk_en	    => Temp_en,
-      divider_tdata => Temp_divider_tdata,
-      divider_tuser => Temp_divider_tuser,
-
-      divisor_tdata   => Temp_divisor_tdata,
-      divisor_tvalid  => Temp_divisor_tvalid,
-      dividend_tdata  => Temp_dividend_tdata,
-      dividend_tvalid => Temp_dividend_tvalid,
-      dividend_tuser  => Temp_dividend_tuser,
-      BRAM_addr	      => BRAM_addr_Temp,
-      Temp	      => Temp_out,
-      data_valid      => data_valid_Temp
-      );
-  ------------------------------------------------------------------------------------------
-  ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-  iSat_divider : div_gen_0
-    port map (
-      aclk		     => adc_clk,
-      s_axis_divisor_tvalid  => iSat_divisor_tvalid,
-      s_axis_divisor_tdata   => iSat_divisor_tdata,
-      s_axis_dividend_tvalid => iSat_dividend_tvalid,
-      s_axis_dividend_tuser  => iSat_dividend_tuser,
-      s_axis_dividend_tdata  => iSat_dividend_tdata,
-      m_axis_dout_tvalid     => iSat_divider_tvalid,
-      m_axis_dout_tuser	     => iSat_divider_tuser,
-      m_axis_dout_tdata	     => iSat_divider_tdata
-      );
-  -- INST_TAG_END ------ End INSTANTIATION Template --------- 
-
-  ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-  iSat_BRAM : blk_mem_gen_0
-    port map (
-      clka  => adc_clk,
-      wea   => wea,
-      addra => BRAM_addr_iSat,
-      dina  => dina,
-      douta => iSatBRAM
-      );
-  -- INST_TAG_END ------ End INSTANTIATION Template ---------
-
-  ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-  Temp_divider : div_gen_0
-    port map (
-      aclk		     => adc_clk,
-      s_axis_divisor_tvalid  => Temp_divisor_tvalid,
-      s_axis_divisor_tdata   => Temp_divisor_tdata,
-      s_axis_dividend_tvalid => Temp_dividend_tvalid,
-      s_axis_dividend_tuser  => Temp_dividend_tuser,
-      s_axis_dividend_tdata  => Temp_dividend_tdata,
-      m_axis_dout_tvalid     => Temp_divider_tvalid,
-      m_axis_dout_tuser	     => Temp_divider_tuser,
-      m_axis_dout_tdata	     => Temp_divider_tdata
-      );
-  -- INST_TAG_END ------ End INSTANTIATION Template --------- 
-
-  ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-  Temp_BRAM : blk_mem_gen_0
-    port map (
-      clka  => adc_clk,
-      wea   => wea,
-      addra => BRAM_addr_Temp,
-      dina  => dina,
-      douta => TempBRAM
-      );
-  -- INST_TAG_END ------ End INSTANTIATION Template ---------
-
-  ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-  vFloat_divider : div_gen_0
-    port map (
-      aclk		     => adc_clk,
-      s_axis_divisor_tvalid  => vFloat_divisor_tvalid,
-      s_axis_divisor_tdata   => vFloat_divisor_tdata,
-      s_axis_dividend_tvalid => vFloat_dividend_tvalid,
-      s_axis_dividend_tuser  => vFloat_dividend_tuser,
-      s_axis_dividend_tdata  => vFloat_dividend_tdata,
-      m_axis_dout_tvalid     => vFloat_divider_tvalid,
-      m_axis_dout_tuser	     => vFloat_divider_tuser,
-      m_axis_dout_tdata	     => vFloat_divider_tdata
-      );
-  -- INST_TAG_END ------ End INSTANTIATION Template --------- 
-
-  ------------- Begin Cut here for INSTANTIATION Template ----- INST_TAG
-  vFloat_BRAM : blk_mem_gen_0
-    port map (
-      clka  => adc_clk,
-      wea   => wea,
-      addra => BRAM_addr_vFloat,
-      dina  => dina,
-      douta => vFloatBRAM
-      );
-  -- INST_TAG_END ------ End INSTANTIATION Template ---------
-
-  iSatBRAM   <= std_logic_vector(BRAMret_iSat);
-  TempBRAM   <= std_logic_vector(BRAMret_iSat);
-  vFloatBRAM <= std_logic_vector(BRAMret_iSat);
-
-  -- Clock process definitions
-  adc_clk_process : process
-  begin
-    adc_clk <= '0';
-    wait for adc_clk_period/2;
-    adc_clk <= '1';
-    wait for adc_clk_period/2;
-  end process;
-
-  -- purpose: Stimulation process to provide voltage input
+  -- purpose: Process to set the voltage input
   -- type   : combinational
-  -- inputs : adc_clk
+  -- inputs : 
   -- outputs: volt_in
-  voltInput : process
-  begin	 -- process voltInput
-    wait for adc_clk_period;
-    volt_in <= volt_in + 2;
-    wait for adc_clk_period;
-    volt_in <= volt_in - 2;
-  end process voltInput;
+  volt_proc: process is
+  begin  -- process volt_proc
+    wait for adc_clk_period*38;
+    volt_in <= std_logic_vector(to_signed(1253, volt_in'length));
+    wait for adc_clk_period*38;
+    volt_in <= std_logic_vector(to_signed(-1253, volt_in'length));
+    wait for adc_clk_period*38;
+    volt_in <= std_logic_vector(to_signed(0, volt_in'length));
+  end process volt_proc;
 
 end architecture test_bench;

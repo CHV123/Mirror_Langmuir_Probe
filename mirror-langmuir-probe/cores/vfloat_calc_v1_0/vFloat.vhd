@@ -1,9 +1,7 @@
 -------------------------------------------------------------------------------
--- Module to set 3 different voltages levels for inital MLP demonstration
+-- Module to calculate the floating potential of a langmuir probe for use in
+-- the MLP instrument.
 -- Started on March 26th by Charlie Vincent
---
--- Adjust variable is to lengthen period to a number that is indivisible by three
--- First two levels will be of length period, third level will be of length
 -- period + adjust
 -------------------------------------------------------------------------------
 
@@ -12,17 +10,15 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity vFloatCalc is
-
   generic (
-    mapBRAMco : integer := 8;
-    mapBRAMad : integer := 0);
+    Temp_guess : integer := 1000;
+    iSat_guess : integer := 200);
   port (
     adc_clk       : in std_logic;       -- adc input clock
-    iSat          : in signed(13 downto 0);  -- Floating Voltage input
-    Temp          : in signed(13 downto 0);  -- Temperature input
-    BRAMret       : in signed(13 downto 0);  -- data returned by BRAM
-    volt_in       : in signed(13 downto 0);  -- Voltage input
-    volt2         : in signed(13 downto 0);  -- Fist bias voltage in cycle
+    iSat          : in std_logic_vector(15 downto 0);  -- Floating Voltage input
+    Temp          : in std_logic_vector(15 downto 0);  -- Temperature input
+    BRAMret       : in std_logic_vector(13 downto 0);  -- data returned by BRAM
+    volt_in       : in std_logic_vector(13 downto 0);  -- Voltage input
     clk_en        : in std_logic;       -- Clock Enable to set period start
     divider_tdata : in std_logic_vector(31 downto 0);
     divider_tuser : in std_logic_vector(1 downto 0);
@@ -33,7 +29,7 @@ entity vFloatCalc is
     dividend_tvalid : out std_logic;
     dividend_tuser  : out std_logic_vector(1 downto 0);
     BRAM_addr       : out std_logic_vector(13 downto 0);  -- BRAM address out
-    vFloat          : out signed(13 downto 0);            -- Saturation current
+    vFloat          : out std_logic_vector(15 downto 0);            -- Saturation current
     data_valid      : out std_logic);  -- valid to propagate to float and temp block
 
 end entity vFloatCalc;
@@ -49,9 +45,9 @@ architecture Behavioral of vFloatCalc is
   signal tot_lat     : integer range 0 to 31 := 0;
   signal waitBRAM    : std_logic             := '0';  -- Signal to indicate when
                                         -- to wait for the bram return
-  signal storeSig    : signed(13 downto 0)   := (others => '0');
+  signal storeSig    : signed(15 downto 0)   := (others => '0');
   signal divider_int : signed(13 downto 0)   := (others => '0');
-  signal divider_rem : signed(13 downto 0)   := (others => '0');
+  signal divider_rem : signed(12 downto 0)   := (others => '0');
 
 begin  -- architecture Behavioral
 
@@ -62,12 +58,12 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: saturation current
   vFloat_proc : process (adc_clk) is
-    variable vFloat_mask : signed(27 downto 0) := (others => '0');
+    variable vFloat_mask : signed(29 downto 0) := (others => '0');
   begin
     if rising_edge(adc_clk) then
       if exp_en = '1' then
-        vFloat_mask  := 0 - (storeSig * BRAMret);
-        vFloat       <= vFloat_mask(13 downto 0);
+        vFloat_mask  := shift_right(0 - (storeSig * signed(BRAMret)), 7);
+        vFloat       <= std_logic_vector(vFloat_mask(15 downto 0));
         data_valid <= '1';
       else
         data_valid <= '0';
@@ -83,13 +79,17 @@ begin  -- architecture Behavioral
   begin  -- process diff_proc
     if rising_edge(adc_clk) then
       if clk_en = '1' then
-        divisor_tdata   <= std_logic_vector(to_signed(to_integer(iSat), dividend_tdata'length));
-        dividend_tdata  <= std_logic_vector(to_signed(to_integer(volt_in), divisor_tdata'length));
+        if unsigned(iSat) > 0 then
+          divisor_tdata   <= std_logic_vector(to_signed(to_integer(signed(iSat)), dividend_tdata'length));
+        else
+          divisor_tdata   <= std_logic_vector(to_signed(iSat_guess, dividend_tdata'length));
+        end if;        
+        dividend_tdata  <= std_logic_vector(to_signed(to_integer(signed(volt_in)), divisor_tdata'length));
         dividend_tuser  <= std_logic_vector(to_unsigned(1, dividend_tuser'length));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
         diff_set        <= '1';
-        storeSig       <= Temp;
+        storeSig       <= signed(Temp);
       else
         divisor_tdata   <= (others => '0');
         dividend_tdata  <= (others => '0');
@@ -110,8 +110,8 @@ begin  -- architecture Behavioral
   begin	 -- process BRAM_proc
     if rising_edge(adc_clk) then
       if index = to_unsigned(1, index'length) then
-	divider_rem <= signed(divider_tdata(11 downto 0));
-	divider_int <= signed(divider_tdata(25 downto 12));
+	divider_rem <= signed(divider_tdata(12 downto 0));
+	divider_int <= signed(divider_tdata(26 downto 13));
 	case divider_int is
 	  when to_signed(-1, 14) =>
 	    addr_mask := 0;
@@ -121,7 +121,12 @@ begin  -- architecture Behavioral
 	    addr_mask := 8192 + to_integer(divider_rem);
 	  when to_signed(2, 14) =>
 	    addr_mask := 12288 + to_integer(divider_rem);
-	  when others => null;
+	  when others =>
+            if divider_int < to_signed(-1, 14) then
+              addr_mask := 0;
+            elsif divider_int >= to_signed(3, 14) then
+              addr_mask := 16383;
+            end if;
 	end case;
 	BRAM_addr <= std_logic_vector(to_unsigned(addr_mask, 14));
 	waitBRAM  <= '1';
@@ -130,6 +135,7 @@ begin  -- architecture Behavioral
       end if;
     end if;
   end process BRAM_proc;
+  
   -- purpose: process to collect bram data after address is set by division module
   -- type   : combinational
   -- inputs : adc_clk
@@ -141,8 +147,6 @@ begin  -- architecture Behavioral
         exp_count <= exp_count + 1;
       end if;
       if exp_count = 1 then
-        exp_count <= exp_count + 1;
-      elsif exp_count = 2 then
         exp_en <= '1';
       end if;
       if exp_en = '1' then

@@ -28,8 +28,9 @@ entity CurrentResponse is
 end entity CurrentResponse;
 
 architecture Behavioral of CurrentResponse is
+	--signal T_mask : signed(13 downto 0);
 begin  -- architecture Behavioral
-
+			--T_mask <= T_electron_in;
 	Pass_through : process(adc_clk)
 	begin
 		if (rising_edge(adc_clk)) then
@@ -42,8 +43,8 @@ begin  -- architecture Behavioral
 	end process;
 
 	-- Take the input from Div and Expo blocks
-    first_mltp : process(adc_clk)        
-    variable V_curr_mask integer := 0; 
+    first_mltp : process(adc_clk)     
+    variable V_curr_mask : integer := 0; 
     begin
     	if (rising_edge(adc_clk)) then
     		V_curr_mask := to_integer(Resistence)*to_integer(I_sat)*(1-to_integer(Expo_result));

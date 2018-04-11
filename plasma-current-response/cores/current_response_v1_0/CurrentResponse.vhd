@@ -16,21 +16,27 @@ entity CurrentResponse is
     I_sat : in signed(13 downto 0);
     V_floating : in signed(13 downto 0);
     Expo_result : in signed(13 downto 0);
+    Expo_result_tvalid : in std_logic;
     Bias_voltage : in signed(13 downto 0);
     Resistence : in signed(13 downto 0);
 
-    Expo_adress : out signed(13 downto 0);
+
     V_LP : out signed(13 downto 0);
+    V_LP_tvalid : out std_logic;
     T_electron_out : out signed(13 downto 0);
+    T_electron_out_tvalid : out std_logic;
     V_curr : out signed(13 downto 0)
     );
 
 end entity CurrentResponse;
 
 architecture Behavioral of CurrentResponse is
-	--signal T_mask : signed(13 downto 0);
+
 begin  -- architecture Behavioral
-			--T_mask <= T_electron_in;
+T_electron_out_tvalid <= '1';
+V_LP_tvalid <= '1';
+
+
 	Pass_through : process(adc_clk)
 	begin
 		if (rising_edge(adc_clk)) then
@@ -48,7 +54,7 @@ begin  -- architecture Behavioral
     begin
     	if (rising_edge(adc_clk)) then
     		V_curr_mask := to_integer(Resistence)*to_integer(I_sat)*(1-to_integer(Expo_result));
-    		V_curr <= to_signed(V_curr_mask,42)(13 downto 0);
+    		V_curr <= shift_right(to_signed(V_curr_mask,42), 10)(13 downto 0);
     	end if; 
     end process;
 

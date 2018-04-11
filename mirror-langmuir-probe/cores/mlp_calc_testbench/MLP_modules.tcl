@@ -131,7 +131,6 @@ set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:blk_mem_gen:8.4\
-xilinx.com:ip:clk_wiz:5.4\
 xilinx.com:ip:div_gen:5.1\
 "
 
@@ -233,10 +232,6 @@ proc create_root_design { parentCell } {
   set input_voltage [ create_bd_port -dir I -from 13 -to 0 input_voltage ]
   set output_voltage [ create_bd_port -dir O -from 13 -to 0 output_voltage ]
   set period [ create_bd_port -dir I -from 31 -to 0 period ]
-  set reset_rtl_0 [ create_bd_port -dir I -type rst reset_rtl_0 ]
-  set_property -dict [ list \
-   CONFIG.POLARITY {ACTIVE_HIGH} \
- ] $reset_rtl_0
 
   # Create instance: SetVolts_0, and set properties
   set block_name SetVolts
@@ -264,7 +259,7 @@ proc create_root_design { parentCell } {
   set blk_mem_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_0 ]
   set_property -dict [ list \
    CONFIG.Byte_Size {9} \
-   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/exp_lut.coe} \
+   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/temp_calc_v1_0/oneLn_lut.coe} \
    CONFIG.EN_SAFETY_CKT {false} \
    CONFIG.Enable_32bit_Address {false} \
    CONFIG.Enable_A {Always_Enabled} \
@@ -285,7 +280,7 @@ proc create_root_design { parentCell } {
   set blk_mem_gen_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_1 ]
   set_property -dict [ list \
    CONFIG.Byte_Size {9} \
-   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/temp_calc_v1_0/oneLn_lut.coe} \
+   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/exp_lut.coe} \
    CONFIG.EN_SAFETY_CKT {false} \
    CONFIG.Enable_32bit_Address {false} \
    CONFIG.Enable_A {Always_Enabled} \
@@ -322,9 +317,6 @@ proc create_root_design { parentCell } {
    CONFIG.Write_Width_B {14} \
    CONFIG.use_bram_block {Stand_Alone} \
  ] $blk_mem_gen_2
-
-  # Create instance: clk_wiz, and set properties
-  set clk_wiz [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:5.4 clk_wiz ]
 
   # Create instance: div_gen_0, and set properties
   set div_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0 ]
@@ -399,7 +391,7 @@ proc create_root_design { parentCell } {
   connect_bd_intf_net -intf_net vFloatCalc_0_divisor [get_bd_intf_pins div_gen_1/S_AXIS_DIVISOR] [get_bd_intf_pins vFloatCalc_0/divisor]
 
   # Create port connections
-  connect_bd_net -net Net [get_bd_pins SetVolts_0/adc_clk] [get_bd_pins TempCalc_0/adc_clk] [get_bd_pins clk_wiz/clk_out1] [get_bd_pins div_gen_0/aclk] [get_bd_pins div_gen_1/aclk] [get_bd_pins div_gen_2/aclk] [get_bd_pins iSatCalc_0/adc_clk] [get_bd_pins vFloatCalc_0/adc_clk]
+  connect_bd_net -net Net [get_bd_ports clk_100MHz] [get_bd_pins SetVolts_0/adc_clk] [get_bd_pins TempCalc_0/adc_clk] [get_bd_pins blk_mem_gen_0/clka] [get_bd_pins blk_mem_gen_1/clka] [get_bd_pins blk_mem_gen_2/clka] [get_bd_pins div_gen_0/aclk] [get_bd_pins div_gen_1/aclk] [get_bd_pins div_gen_2/aclk] [get_bd_pins iSatCalc_0/adc_clk] [get_bd_pins vFloatCalc_0/adc_clk]
   connect_bd_net -net SetVolts_0_Temp_en [get_bd_pins SetVolts_0/Temp_en] [get_bd_pins TempCalc_0/clk_en]
   connect_bd_net -net SetVolts_0_iSat_en [get_bd_pins SetVolts_0/iSat_en] [get_bd_pins iSatCalc_0/clk_en]
   connect_bd_net -net SetVolts_0_vFloat_en [get_bd_pins SetVolts_0/vFloat_en] [get_bd_pins vFloatCalc_0/clk_en]
@@ -412,12 +404,10 @@ proc create_root_design { parentCell } {
   connect_bd_net -net blk_mem_gen_0_douta [get_bd_pins TempCalc_0/BRAMret] [get_bd_pins blk_mem_gen_0/douta]
   connect_bd_net -net blk_mem_gen_1_douta [get_bd_pins blk_mem_gen_1/douta] [get_bd_pins iSatCalc_0/BRAMret]
   connect_bd_net -net blk_mem_gen_2_douta [get_bd_pins blk_mem_gen_2/douta] [get_bd_pins vFloatCalc_0/BRAMret]
-  connect_bd_net -net clk_100MHz_1 [get_bd_ports clk_100MHz] [get_bd_pins clk_wiz/clk_in1]
   connect_bd_net -net iSatCalc_0_BRAM_addr [get_bd_pins blk_mem_gen_1/addra] [get_bd_pins iSatCalc_0/BRAM_addr]
   connect_bd_net -net iSatCalc_0_iSat [get_bd_pins TempCalc_0/iSat] [get_bd_pins iSatCalc_0/iSat] [get_bd_pins vFloatCalc_0/iSat]
   connect_bd_net -net input_voltage_1 [get_bd_ports input_voltage] [get_bd_pins TempCalc_0/volt_in] [get_bd_pins iSatCalc_0/volt_in] [get_bd_pins vFloatCalc_0/volt_in]
   connect_bd_net -net period_1 [get_bd_ports period] [get_bd_pins SetVolts_0/period_in]
-  connect_bd_net -net reset_rtl_0_1 [get_bd_ports reset_rtl_0] [get_bd_pins clk_wiz/reset]
   connect_bd_net -net vFloatCalc_0_BRAM_addr [get_bd_pins blk_mem_gen_2/addra] [get_bd_pins vFloatCalc_0/BRAM_addr]
   connect_bd_net -net vFloatCalc_0_vFloat [get_bd_pins TempCalc_0/vFloat] [get_bd_pins iSatCalc_0/vFloat] [get_bd_pins vFloatCalc_0/vFloat]
 
@@ -438,6 +428,4 @@ proc create_root_design { parentCell } {
 
 create_root_design ""
 
-
-common::send_msg_id "BD_TCL-1000" "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 

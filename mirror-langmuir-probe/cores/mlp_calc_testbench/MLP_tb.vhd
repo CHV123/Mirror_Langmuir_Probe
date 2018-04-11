@@ -19,8 +19,7 @@ architecture test_bench of tb_MLP is
       clk_100MHz     : in  std_logic;
       input_voltage  : in  std_logic_vector(13 downto 0);
       output_voltage : out std_logic_vector(13 downto 0);
-      period         : in  std_logic_vector(31 downto 0);
-      reset_rtl_0    : in  std_logic);
+      period         : in  std_logic_vector(31 downto 0));
   end component MLP_modules;
 
   signal adc_clk  : std_logic                     := '0';
@@ -42,8 +41,7 @@ begin  -- architecture behaviour
       clk_100MHz     => adc_clk,
       input_voltage  => volt_in,
       output_voltage => volt_out,
-      period         => period,
-      reset_rtl_0    => reset);
+      period         => period);
 
     -- purpose: Process for sim clock
     -- type   : combinational
@@ -63,12 +61,12 @@ begin  -- architecture behaviour
   -- outputs: volt_in
   volt_proc: process is
   begin  -- process volt_proc
-    wait for adc_clk_period*38;
     volt_in <= std_logic_vector(to_signed(1253, volt_in'length));
     wait for adc_clk_period*38;
     volt_in <= std_logic_vector(to_signed(-1253, volt_in'length));
     wait for adc_clk_period*38;
     volt_in <= std_logic_vector(to_signed(0, volt_in'length));
+    wait for adc_clk_period*38;
   end process volt_proc;
 
 end architecture test_bench;

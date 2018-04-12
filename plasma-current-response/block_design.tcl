@@ -77,25 +77,52 @@ for {set i 0} {$i < [get_parameter n_adc]} {incr i} {
 #set_property offset [get_memory_offset adc_fifo] $memory_segment
 #set_property range  [get_memory_range adc_fifo]  $memory_segment
 
-
-#################################### Current Response Module 2 #####################################################
-# Instantiating the current response module
+################################### Make all the Blocks ################################################3
 create_bd_cell -type ip -vlnv PSFC:user:current_response:1.0 current_response_0
+create_bd_cell -type ip -vlnv PSFC:user:Div_to_address:1.0 Div_to_address_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_0
 
-# Connecting to other blocks
-connect_bd_net [get_bd_pins current_response_0/current] [get_bd_pins adc_dac/dac1]; # connecting output to DAC
-connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins current_response_0/adc_clk]; # connecting adc_clk
-connect_bd_net [get_bd_pins current_response_0/probe_bias] [get_bd_pins adc_dac/adc1] ; # connecting input to ADC
+################################### All Blocks Made #####################################################
+
+################################### Connect All the Blocks ##############################################
+#################################### Current Response Module  #####################################################
+connect_bd_net [get_bd_pins current_response_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins current_response_0/T_electron_out] [get_bd_pins div_gen_0/s_axis_divisor_tdata]
+connect_bd_net [get_bd_pins current_response_0/V_LP] [get_bd_pins div_gen_0/s_axis_dividend_tdata]
+connect_bd_net [get_bd_pins current_response_0/V_LP_tvalid] [get_bd_pins div_gen_0/s_axis_dividend_tvalid]
+connect_bd_net [get_bd_pins current_response_0/T_electron_out_tvalid] [get_bd_pins div_gen_0/s_axis_divisor_tvalid]
+connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac1]
+connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins sts/Current]
+connect_bd_net [get_bd_pins ctl/Isat] [get_bd_pins current_response_0/I_sat]
+connect_bd_net [get_bd_pins ctl/Vfloating] [get_bd_pins current_response_0/V_floating]
+connect_bd_net [get_bd_pins ctl/Temperture] [get_bd_pins current_response_0/T_electron_in]
+connect_bd_net [get_bd_pins current_response_0/Bias_voltage] [get_bd_pins adc_dac/adc1]
+connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac2]
+connect_bd_net [get_bd_pins current_response_0/Resistence] [get_bd_pins ctl/Resistence]
 ##################################### Current Response Module #######################################################
 
 
-#################################### Current Response Module 2 #####################################################
-# Instantiating the current response module
-create_bd_cell -type ip -vlnv PSFC:user:current_response:1.0 current_response_1
+##################################### Div_to_address ################################################################
+connect_bd_net [get_bd_pins Div_to_address_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins Div_to_address_0/BRAM_addr] [get_bd_pins blk_mem_gen_0/addra]
+connect_bd_net [get_bd_pins Div_to_address_0/Address_gen_tvalid] [get_bd_pins current_response_0/Expo_result_tvalid]
+##################################### Div_to_address ################################################################
 
-# Connecting to other blocks
-connect_bd_net [get_bd_pins current_response_1/current] [get_bd_pins adc_dac/dac2]; # connecting output to DAC
-connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins current_response_1/adc_clk]; # connecting adc_clk
-connect_bd_net [get_bd_pins current_response_1/probe_bias] [get_bd_pins adc_dac/adc2] ; # connecting input to ADC
-##################################### Current Response Module #######################################################
 
+##################################### Divider Module ################################################################
+set_property -dict [list CONFIG.dividend_and_quotient_width.VALUE_SRC USER CONFIG.divisor_width.VALUE_SRC USER] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.dividend_and_quotient_width {14} CONFIG.remainder_type {Fractional}]  [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.divisor_width {14} CONFIG.fractional_width {13} CONFIG.latency {31}] [get_bd_cells div_gen_0]
+connect_bd_net [get_bd_pins div_gen_0/aclk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tdata] [get_bd_pins Div_to_address_0/divider_tdata]
+connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tvalid] [get_bd_pins Div_to_address_0/divider_tvalid]
+##################################### Divider Module ################################################################
+
+
+##################################### BRAM Module ###################################################################
+set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Write_Enable {false} CONFIG.Byte_Size {9} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {16384} CONFIG.Read_Width_A {14} CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {14} CONFIG.Read_Width_B {14} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home1/william/Koheron/koheron-sdk/instruments/plasma-current-response/cores/current_response_v1_0/exp_lut.coe} CONFIG.Use_RSTA_Pin {false} CONFIG.use_bram_block {Stand_Alone} CONFIG.EN_SAFETY_CKT {false}] [get_bd_cells blk_mem_gen_0]
+connect_bd_net [get_bd_pins blk_mem_gen_0/clka] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins blk_mem_gen_0/douta] [get_bd_pins current_response_0/Expo_result]
+##################################### BRAM Module ###################################################################
+##################################### Connected all the Blocks ######################################################

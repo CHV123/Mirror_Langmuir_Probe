@@ -10,6 +10,7 @@ cores:
   - fpga/cores/axi_sts_register_v1_0
   - fpga/cores/dna_reader_v1_0
   - instruments/plasma-current-response/cores/current_response_v1_0
+  - instruments/plasma-current-response/cores/Div_to_address_v1_0
 
 memory:
   - name: control
@@ -31,6 +32,7 @@ control_registers:
   - Isat
   - Vfloating
   - Temperture
+  - Resistence
 
 status_registers:
   - adc[n_adc]

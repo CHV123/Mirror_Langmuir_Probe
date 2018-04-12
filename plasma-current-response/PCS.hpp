@@ -1,9 +1,9 @@
-/// PCRS driver
+/// PCS driver
 ///
 /// (c) Koheron
 
-#ifndef __DRIVERS_PCRS_HPP__
-#define __DRIVERS_PCRS_HPP__
+#ifndef __DRIVERS_PCS_HPP__
+#define __DRIVERS_PCS_HPP__
 
 #include <atomic>
 #include <thread>
@@ -22,10 +22,10 @@ namespace Fifo_regs {
 constexpr uint32_t dac_size = mem::dac_range/sizeof(uint32_t);
 
 
-class PCRS
+class PCS
 {
   public:
-    PCRS(Context& ctx)
+    PCS(Context& ctx)
     : ctl(ctx.mm.get<mem::control>())
     , sts(ctx.mm.get<mem::status>())
     // , adc_fifo_map(ctx.mm.get<mem::adc_fifo>())
@@ -42,7 +42,7 @@ class PCRS
         ctl.clear_bit<reg::trigger, 0>();
     }
 
-    // PCRS generator
+    // PCS generator
 
     void set_Isat(uint32_t Isat) {
         ctl.write<reg::Isat>(Isat);
@@ -54,6 +54,10 @@ class PCRS
 
     void set_Vfloating(uint32_t Vfloating) {
         ctl.write<reg::Vfloating>(Vfloating);
+    }
+
+    void set_Resistence(uint32_t Resistence) {
+        ctl.write<reg::Resistence>(Resistence);
     }
 
     uint32_t get_Current() {
@@ -118,15 +122,15 @@ class PCRS
 
 };
 
-inline void PCRS::start_fifo_acquisition() {
+inline void PCS::start_fifo_acquisition() {
     if (! fifo_acquisition_started) {
         // fifo_buffer.fill(0);
-        fifo_thread = std::thread{&PCRS::fifo_acquisition_thread, this};
+        fifo_thread = std::thread{&PCS::fifo_acquisition_thread, this};
         fifo_thread.detach();
     }
 }
 
-inline void PCRS::fifo_acquisition_thread()
+inline void PCS::fifo_acquisition_thread()
 {
     constexpr auto fifo_sleep_for = std::chrono::microseconds(5000);
 
@@ -143,4 +147,4 @@ inline void PCRS::fifo_acquisition_thread()
     }
 }
 
-#endif // __DRIVERS_PCRS_HPP__
+#endif // __DRIVERS_PCS_HPP__

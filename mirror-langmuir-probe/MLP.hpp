@@ -45,21 +45,13 @@ public:
   void set_led(uint32_t led) {
     ctl.write<reg::led>(led);
   }
-  
-  void set_voltage_1(uint32_t voltage1) {
-    ctl.write<reg::voltage1>(voltage1);
-  }
-  
-  void set_voltage_2(uint32_t voltage2) {
-    ctl.write<reg::voltage2>(voltage2);
-  }
 
-  void set_voltage_3(uint32_t voltage3) {
-    ctl.write<reg::voltage3>(voltage3);
+  void set_period(uint32_t period) {
+    ctl.write<reg::Period>(period);
   }
 
   uint32_t get_temperature() {
-    uint32_t temp_value = sts.read<reg::temperature>();
+    uint32_t temp_value = sts.read<reg::Temperature>();
     return temp_value;
   }
 
@@ -68,9 +60,9 @@ public:
     return Isat_value;
   }
 
-  uint32_t get_Edensity() {
-    uint32_t Edens_value = sts.read<reg::Edensity>();
-    return Edens_value;
+  uint32_t get_vFloat() {
+    uint32_t vFloat_value = sts.read<reg::vFloat>();
+    return vFloat_value;
   }  
   
   // Don't need DAC data

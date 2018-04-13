@@ -24,19 +24,10 @@ class MLP(object):
     @command()
     def set_led(self, led):
         pass
-
     @command()
-    def set_voltage_1(self, voltage1):
+    def set_period(self, period):
         pass
-
-    @command()
-    def set_voltage_2(self, voltage2):
-        pass
-
-    @command()
-    def set_voltage_3(self, voltage3):
-        pass
-
+    
     @command()
     def get_temperature(self):
         return self.client.recv_uint32()
@@ -46,7 +37,7 @@ class MLP(object):
         return self.client.recv_uint32()
 
     @command()
-    def get_Edensity(self):
+    def get_vFloat(self):
         return self.client.recv_uint32()
 
     # def set_dac(self):

@@ -15,7 +15,6 @@ entity SetVolts is
 
   generic (
     period     : integer := 38;
-    settle     : integer := 25;
     Temp_guess : integer := 1000;
     negBias    : integer := -3;
     posBias    : integer := 1
@@ -151,7 +150,7 @@ begin  -- architecture Behavioral
   -- outputs: volt_ready
   en_calc_proc : process (adc_clk) is
   begin	 -- process en_calc_proc
-    if counter = settle then
+    if counter = period_mask - 3 then
       case level is
 	when 0	    => volt_ready <= "01";
 	when 1	    => volt_ready <= "10";
@@ -164,19 +163,23 @@ begin  -- architecture Behavioral
 
   -- Setting the output to various voltage levels
   set_proc : process(adc_clk)
-    variable outMask : signed(27 downto 0) := (others => '0');
+    variable outMask	: signed(27 downto 0) := (others => '0');
+    variable level_prev : integer	      := 0;
   begin
     if rising_edge(adc_clk) then
-      if level = 0 then
-	outMask := to_signed(NegBias * to_integer(TempMask), 28);
-	volt1	<= std_logic_vector(outMask(13 downto 0));
-      elsif level = 1 then
-	outMask := to_signed(PosBias * to_integer(TempMask), 28);
-	volt2	<= std_logic_vector(outMask(13 downto 0));
-      elsif level = 2 then
-	outMask := to_signed(0, 28);
+      if level_prev /= level then
+	if level = 0 then
+	  outMask := to_signed(NegBias * to_integer(TempMask), 28);
+	  volt1	  <= std_logic_vector(outMask(13 downto 0));
+	elsif level = 1 then
+	  outMask := to_signed(PosBias * to_integer(TempMask), 28);
+	  volt2	  <= std_logic_vector(outMask(13 downto 0));
+	elsif level = 2 then
+	  outMask := to_signed(0, 28);
+	end if;
       end if;
-      output <= outMask(13 downto 0);
+      output	 <= outMask(13 downto 0);
+      level_prev := level;
     end if;
   end process;
 

@@ -12,6 +12,7 @@ cores:
   - instruments/plasma-current-response/cores/current_response_v1_0
   - instruments/plasma-current-response/cores/Div_to_address_v1_0
   - instruments/plasma-current-response/cores/Profile_Sweep_v1_0 
+  - instruments/plasma-current-response/cores/input_control_v1_0
 
 memory:
   - name: control
@@ -30,6 +31,9 @@ memory:
 control_registers:
   - led
   - trigger
+  - Temperature
+  - ISat
+  - Vfloating
   - Resistence
 
 status_registers:

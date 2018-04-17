@@ -38,11 +38,13 @@ entity SetVolts is
 end entity SetVolts;
 
 architecture Behavioral of SetVolts is
-  signal output	    : signed(13 downto 0)	   := (others => '0');	-- mask for the output voltage
-  signal counter    : integer			   := 0;  -- counter for setting the voltage levels
-  signal level	    : integer range 0 to 2	   := 0;  -- counter for registering the voltage levels
-  signal TempMask   : signed(15 downto 0)	   := to_signed(Temp_guess, 16);
-  signal volt_ready : std_logic_vector(1 downto 0) := (others => '0');
+  signal output	     : signed(13 downto 0)	    := (others => '0');	 -- mask for the output voltage
+  signal counter     : integer			    := 0;  -- counter for setting the voltage levels
+  signal level	     : integer range 0 to 2	    := 0;  -- counter for registering the voltage levels
+  signal TempMask    : signed(15 downto 0)	    := to_signed(Temp_guess, 16);
+  signal volt_ready  : std_logic_vector(1 downto 0) := (others => '0');
+  signal volt1_proxy : signed(20 downto 0)	    := to_signed(Temp_guess*negBias, 21);
+  signal volt2_proxy : signed(19 downto 0)	    := to_signed(Temp_guess*posBias, 20);
 
   signal period_mask : integer := period;
 
@@ -67,14 +69,19 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: TempMask
   temp_check_proc : process (adc_clk) is
+    variable TempMask_proxy : signed(15 downto 0) := to_signed(Temp_guess, 16);
   begin	 -- process temp_check_proc
     if rising_edge(adc_clk) then
       if Temp_valid = '1' then
 	if signed(Temp) > to_signed(0, Temp'length) then
-	  TempMask <= signed(Temp);
+	  TempMask	 <= signed(Temp);
+	  TempMask_proxy := signed(Temp);
 	else
-	  TempMask <= to_signed(Temp_guess, TempMask'length);
+	  TempMask	 <= to_signed(Temp_guess, TempMask'length);
+	  TempMask_proxy := to_signed(Temp_guess, TempMask'length);
 	end if;
+	volt1_proxy <= to_signed(negBias * to_integer(TempMask_proxy), 21);
+	volt2_proxy <= to_signed(posBias * to_integer(TempMask_proxy), 20);
       end if;
     end if;
   end process temp_check_proc;
@@ -163,19 +170,17 @@ begin  -- architecture Behavioral
 
   -- Setting the output to various voltage levels
   set_proc : process(adc_clk)
-    variable outMask	: signed(27 downto 0) := (others => '0');
+    variable outMask	: signed(20 downto 0) := (others => '0');
     variable level_prev : integer	      := 0;
   begin
     if rising_edge(adc_clk) then
       if level_prev /= level then
 	if level = 0 then
-	  outMask := to_signed(NegBias * to_integer(TempMask), 28);
-	  volt1	  <= std_logic_vector(outMask(13 downto 0));
+	  outMask := volt1_proxy;
 	elsif level = 1 then
-	  outMask := to_signed(PosBias * to_integer(TempMask), 28);
-	  volt2	  <= std_logic_vector(outMask(13 downto 0));
+	  outMask := "0" & volt2_proxy;
 	elsif level = 2 then
-	  outMask := to_signed(0, 28);
+	  outMask := (others => '0');
 	end if;
       end if;
       output	 <= outMask(13 downto 0);
@@ -183,6 +188,8 @@ begin  -- architecture Behavioral
     end if;
   end process;
 
+  volt1	   <= std_logic_vector(volt1_proxy(13 downto 0));
+  volt2	   <= std_logic_vector(volt2_proxy(13 downto 0));
   volt_out <= std_logic_vector(output);
 
 end architecture Behavioral;

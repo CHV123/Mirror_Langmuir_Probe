@@ -61,12 +61,12 @@ begin  -- architecture behaviour
   -- outputs: volt_in
   volt_proc: process is
   begin  -- process volt_proc
-    volt_in <= std_logic_vector(to_signed(1253, volt_in'length));
-    wait for adc_clk_period*38;
-    volt_in <= std_logic_vector(to_signed(-1253, volt_in'length));
-    wait for adc_clk_period*38;
-    volt_in <= std_logic_vector(to_signed(0, volt_in'length));
-    wait for adc_clk_period*38;
+    volt_in <= std_logic_vector(to_signed(881, volt_in'length));
+    wait for adc_clk_period*125;
+    volt_in <= std_logic_vector(to_signed(-6390, volt_in'length));
+    wait for adc_clk_period*125;
+    volt_in <= std_logic_vector(to_signed(434, volt_in'length));
+    wait for adc_clk_period*125;
   end process volt_proc;
 
 end architecture test_bench;

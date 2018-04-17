@@ -243,7 +243,10 @@ proc create_root_design { parentCell } {
      catch {common::send_msg_id "BD_TCL-106" "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+    set_property -dict [ list \
+   CONFIG.period {125} \
+ ] $SetVolts_0
+
   # Create instance: TempCalc_0, and set properties
   set block_name TempCalc
   set block_cell_name TempCalc_0
@@ -265,14 +268,14 @@ proc create_root_design { parentCell } {
    CONFIG.Enable_A {Always_Enabled} \
    CONFIG.Load_Init_File {true} \
    CONFIG.Operating_Mode_A {READ_FIRST} \
-   CONFIG.Read_Width_A {14} \
-   CONFIG.Read_Width_B {14} \
+   CONFIG.Read_Width_A {16} \
+   CONFIG.Read_Width_B {16} \
    CONFIG.Register_PortA_Output_of_Memory_Primitives {true} \
    CONFIG.Use_Byte_Write_Enable {false} \
    CONFIG.Use_RSTA_Pin {false} \
    CONFIG.Write_Depth_A {16384} \
-   CONFIG.Write_Width_A {14} \
-   CONFIG.Write_Width_B {14} \
+   CONFIG.Write_Width_A {16} \
+   CONFIG.Write_Width_B {16} \
    CONFIG.use_bram_block {Stand_Alone} \
  ] $blk_mem_gen_0
 
@@ -280,20 +283,20 @@ proc create_root_design { parentCell } {
   set blk_mem_gen_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_1 ]
   set_property -dict [ list \
    CONFIG.Byte_Size {9} \
-   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/exp_lut.coe} \
+   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/oneexp_lut.coe} \
    CONFIG.EN_SAFETY_CKT {false} \
    CONFIG.Enable_32bit_Address {false} \
    CONFIG.Enable_A {Always_Enabled} \
    CONFIG.Load_Init_File {true} \
    CONFIG.Operating_Mode_A {READ_FIRST} \
-   CONFIG.Read_Width_A {14} \
-   CONFIG.Read_Width_B {14} \
+   CONFIG.Read_Width_A {16} \
+   CONFIG.Read_Width_B {16} \
    CONFIG.Register_PortA_Output_of_Memory_Primitives {true} \
    CONFIG.Use_Byte_Write_Enable {false} \
    CONFIG.Use_RSTA_Pin {false} \
    CONFIG.Write_Depth_A {16384} \
-   CONFIG.Write_Width_A {14} \
-   CONFIG.Write_Width_B {14} \
+   CONFIG.Write_Width_A {16} \
+   CONFIG.Write_Width_B {16} \
    CONFIG.use_bram_block {Stand_Alone} \
  ] $blk_mem_gen_1
 
@@ -307,14 +310,14 @@ proc create_root_design { parentCell } {
    CONFIG.Enable_A {Always_Enabled} \
    CONFIG.Load_Init_File {true} \
    CONFIG.Operating_Mode_A {READ_FIRST} \
-   CONFIG.Read_Width_A {14} \
-   CONFIG.Read_Width_B {14} \
+   CONFIG.Read_Width_A {16} \
+   CONFIG.Read_Width_B {16} \
    CONFIG.Register_PortA_Output_of_Memory_Primitives {true} \
    CONFIG.Use_Byte_Write_Enable {false} \
    CONFIG.Use_RSTA_Pin {false} \
    CONFIG.Write_Depth_A {16384} \
-   CONFIG.Write_Width_A {14} \
-   CONFIG.Write_Width_B {14} \
+   CONFIG.Write_Width_A {16} \
+   CONFIG.Write_Width_B {16} \
    CONFIG.use_bram_block {Stand_Alone} \
  ] $blk_mem_gen_2
 
@@ -326,8 +329,9 @@ proc create_root_design { parentCell } {
    CONFIG.dividend_tuser_width {2} \
    CONFIG.divisor_has_tuser {false} \
    CONFIG.divisor_width {14} \
-   CONFIG.fractional_width {13} \
-   CONFIG.latency {31} \
+   CONFIG.fractional_width {12} \
+   CONFIG.latency {30} \
+   CONFIG.operand_sign {Signed} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_0
 
@@ -339,8 +343,8 @@ proc create_root_design { parentCell } {
    CONFIG.dividend_tuser_width {2} \
    CONFIG.divisor_has_tuser {false} \
    CONFIG.divisor_width {14} \
-   CONFIG.fractional_width {13} \
-   CONFIG.latency {31} \
+   CONFIG.fractional_width {12} \
+   CONFIG.latency {30} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_1
 
@@ -352,8 +356,9 @@ proc create_root_design { parentCell } {
    CONFIG.dividend_tuser_width {2} \
    CONFIG.divisor_has_tuser {false} \
    CONFIG.divisor_width {14} \
-   CONFIG.fractional_width {13} \
-   CONFIG.latency {31} \
+   CONFIG.fractional_width {12} \
+   CONFIG.latency {30} \
+   CONFIG.latency_configuration {Automatic} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_2
 

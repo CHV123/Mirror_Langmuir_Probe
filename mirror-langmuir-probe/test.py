@@ -26,11 +26,19 @@ def int2signed(convInt):
     return retBin
 ##########################################################
 
-driver.set_voltage_1(int(int2signed(4000), 2))
-driver.set_voltage_2(int(int2signed(500), 2))
-driver.set_voltage_3(int(int2signed(-2000), 2))
-driver.set_led(int(125e4))
+driver.set_period(1000)
+# driver.set_acquistion_length(10)
 
-print(driver.get_temperature())
-print(driver.get_Isaturation())
-print(driver.get_Edensity())
+# while True:
+#     try:
+#         time.sleep(0.2)
+#         samples = driver.get_buffer_length()
+#         print(samples)
+#     except KeyboardInterrupt:
+#         break
+
+# dataArray = driver.get_MLP_data()
+
+# saveStr = "MLP_test_data"
+# print(saveStr)
+# np.save(saveStr, dataArray)

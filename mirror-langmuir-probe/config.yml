@@ -13,6 +13,8 @@ cores:
   - instruments/mirror-langmuir-probe/cores/isat_calc_v1_0
   - instruments/mirror-langmuir-probe/cores/temp_calc_v1_0
   - instruments/mirror-langmuir-probe/cores/vfloat_calc_v1_0
+  - instruments/mirror-langmuir-probe/cores/data_collector_v1_0
+  - instruments/mirror-langmuir-probe/cores/acquire_trigger_v1_0
   
 memory:
   - name: control
@@ -21,27 +23,25 @@ memory:
   - name: status
     offset: '0x50000000'
     range: 4K
-  - name: dac
-    offset: '0x40000000'
-    range: 32K
   - name: adc_fifo
     offset: '0x43C10000'
     range: 64K
 
 control_registers:
   - led
-  - trigger
+  - Trigger
   - Period
+  - Acqusition_length
 
 status_registers:
   - adc[n_adc]
   - Temperature
   - Isaturation
   - vFloat
+  - Timestamp
 
 parameters:
   fclk0: 166666667
-  bram_addr_width: 13
   dac_width: 14
   adc_width: 14
   n_adc: 2

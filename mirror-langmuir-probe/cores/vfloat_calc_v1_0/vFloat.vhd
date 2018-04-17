@@ -12,13 +12,13 @@ use ieee.numeric_std.all;
 entity vFloatCalc is
   generic (
     Temp_guess	 : integer := 20;
-    iSat_guess	 : integer := 50;
+    iSat_guess	 : integer := -20;
     vFloat_guess : integer := 0);
   port (
     adc_clk	  : in std_logic;	-- adc input clock
     iSat	  : in std_logic_vector(15 downto 0);  -- Floating Voltage input
     Temp	  : in std_logic_vector(15 downto 0);  -- Temperature input
-    BRAMret	  : in std_logic_vector(13 downto 0);  -- data returned by BRAM
+    BRAMret	  : in std_logic_vector(15 downto 0);  -- data returned by BRAM
     volt_in	  : in std_logic_vector(13 downto 0);  -- Voltage input
     clk_en	  : in std_logic;	-- Clock Enable to set period start
     divider_tdata : in std_logic_vector(31 downto 0);
@@ -48,7 +48,7 @@ architecture Behavioral of vFloatCalc is
 						    -- to wait for the bram return
   signal storeSig  : signed(15 downto 0)   := (others => '0');
 
-  signal vFloat_mask : signed(29 downto 0) := to_signed(vFloat_guess, 30);
+  signal vFloat_mask : signed(31 downto 0) := to_signed(vFloat_guess, 32);
 
   signal addr_mask_store : integer := 0;
   signal int_store	 : integer := 0;
@@ -111,29 +111,37 @@ begin  -- architecture Behavioral
   -- outputs: BRAM_addr, waitBRAM
   BRAM_proc : process (adc_clk) is
     variable divider_int : signed(13 downto 0) := (others => '0');
-    variable divider_rem : signed(12 downto 0) := (others => '0');
+    variable divider_rem : signed(11 downto 0) := (others => '0');
     variable addr_mask	 : integer	       := 0;
   begin	 -- process BRAM_proc
     if rising_edge(adc_clk) then
       if index = to_unsigned(1, index'length) then
 	-- Extracting the integer part and the fractional part returned by the
 	-- divider core to use in the bram address mapping
-	divider_rem := signed(divider_tdata(12 downto 0));
-	divider_int := signed(divider_tdata(26 downto 13));
+	divider_rem := signed(divider_tdata(11 downto 0));
+	divider_int := signed(divider_tdata(25 downto 12));
 	int_store   <= to_integer(divider_int);
 	rem_store   <= to_integer(divider_rem);
 	if divider_int = to_signed(-1, 14) then
 	  addr_mask := 0;
 	elsif divider_int = to_signed(0, 14) then
-	  addr_mask := 4096 + to_integer(divider_rem);
+	  addr_mask := 2048 + to_integer(divider_rem);
 	elsif divider_int = to_signed(1, 14) then
-	  addr_mask := 8192 + to_integer(divider_rem);
+	  addr_mask := 4096 + to_integer(divider_rem);
 	elsif divider_int = to_signed(2, 14) then
+	  addr_mask := 6144 + to_integer(divider_rem);
+	elsif divider_int = to_signed(3, 14) then
+	  addr_mask := 8192 + to_integer(divider_rem);
+	elsif divider_int = to_signed(4, 14) then
+	  addr_mask := 10240 + to_integer(divider_rem);	
+	elsif divider_int = to_signed(5, 14) then
 	  addr_mask := 12288 + to_integer(divider_rem);
+	elsif divider_int = to_signed(6, 14) then
+	  addr_mask := 14336 + to_integer(divider_rem);
 	else
 	  if divider_int < to_signed(-1, 14) then
 	    addr_mask := 0;
-	  elsif divider_int >= to_signed(3, 14) then
+	  elsif divider_int >= to_signed(7, 14) then
 	    addr_mask := 16383;
 	  end if;
 	end if;

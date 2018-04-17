@@ -24,8 +24,13 @@ class MLP(object):
     @command()
     def set_led(self, led):
         pass
+    
     @command()
     def set_period(self, period):
+        pass
+
+    @command()
+    def set_acquistion_length(self, period):
         pass
     
     @command()
@@ -52,9 +57,13 @@ class MLP(object):
     # def get_fifo_length(self):
     #     return self.client.recv_uint32()
 
-    # @command()
-    # def get_fifo_buffer(self):
-    #     return self.client.recv_array(1024, dtype='uint32')
+    @command()
+    def get_MLP_data(self):
+        return self.client.recv_vector(dtype='uint32')
+
+    @command()
+    def get_buffer_length(self):
+        return self.client.recv_uint32() 
 
     # @command()
     # def reset_fifo(self):

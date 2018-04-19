@@ -1,4 +1,4 @@
- -------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Module to set 3 different voltages levels for inital MLP demonstration
 -- Started on March 26th by Charlie Vincent
 -------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ begin  -- architecture Behavioral
 --outputs: BRAM_addr, waitBRAM
 BRAM_proc : process (adc_clk) is
     variable divider_int : signed(13 downto 0) := (others => '0');
-    variable divider_frac : signed(12 downto 0) := (others => '0');
+    variable divider_frac : signed(11 downto 0) := (others => '0');
     variable addr_mask   : integer         := 0;
   begin  -- process BRAM_proc
     if rising_edge(adc_clk) then
@@ -42,18 +42,26 @@ BRAM_proc : process (adc_clk) is
   divider_int := signed(divider_tdata(25 downto 12));
 --int_store   <= to_integer(divider_int);
 --rem_store   <= to_integer(divider_frac);
-  if divider_int = to_signed(-2, 14) then
+  if divider_int = to_signed(-4, 14) then
     addr_mask := 0;
-  elsif divider_int = to_signed(-1, 14) then
+  elsif divider_int = to_signed(-3, 14) then
+    addr_mask := 2048 + to_integer(divider_frac);
+  elsif divider_int = to_signed(-2, 14) then
     addr_mask := 4096 + to_integer(divider_frac);
+  elsif divider_int = to_signed(-1, 14) then
+    addr_mask := 6144 + to_integer(divider_frac);
   elsif divider_int = to_signed(0, 14) then
     addr_mask := 8192 + to_integer(divider_frac);
   elsif divider_int = to_signed(1, 14) then
+    addr_mask := 10240 + to_integer(divider_frac);
+  elsif divider_int = to_signed(2, 14) then
     addr_mask := 12288 + to_integer(divider_frac);
+  elsif divider_int = to_signed(3, 14) then
+    addr_mask := 14336 + to_integer(divider_frac);
   else
-    if divider_int < to_signed(-2, 14) then
+    if divider_int < to_signed(-4, 14) then
       addr_mask := 0;
-    elsif divider_int >= to_signed(2, 14) then
+    elsif divider_int >= to_signed(4, 14) then
       addr_mask := 16383;
     end if;
   end if;

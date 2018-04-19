@@ -1,7 +1,7 @@
 # Python script to generate the saturation current look up table
 
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 dataArray = []
 
@@ -10,12 +10,10 @@ xVal = np.linspace(-8, 8, num=2**14)
 def lutFunction(x):
     exp = np.exp(x)
     func = 1/(exp - 1)
-    if x >= -8 and x < -1:
-        func = func*(2**13)
-    elif x >= -1 and x <= 1:
+    if x > -1 and x < -1:
         func = func*(2**2)
-    elif x > 1 and x <=8:
-        func = func*(2**14)
+    else:
+        func = func*(2**13)
 
     return int(round(func))
 

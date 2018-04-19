@@ -23,7 +23,7 @@ entity iSatCalc is
     volt_in	  : in std_logic_vector(13 downto 0);  -- Voltage input
     volt1	  : in std_logic_vector(13 downto 0);  -- Fist bias voltage in cycle
     clk_en	  : in std_logic;	-- Clock Enable to set period start
-    divider_tdata : in std_logic_vector(31 downto 0);
+    divider_tdata : in std_logic_vector(23 downto 0);
     divider_tvalid : in std_logic;
 
     divisor_tdata   : out std_logic_vector(15 downto 0);
@@ -52,6 +52,8 @@ architecture Behavioral of iSatCalc is
   signal addr_mask_store : integer := 0;
   signal int_store	 : integer := 0;
   signal rem_store	 : integer := 0;
+  
+  signal calc_switch : std_logic := '0';
 
 begin  -- architecture Behavioral
 
@@ -66,7 +68,11 @@ begin  -- architecture Behavioral
   begin
     if rising_edge(adc_clk) then
       if exp_en = '1' then
-	iSat_mask  <= shift_right(storeSig * signed(BRAMret), 1);
+        if calc_switch = '1' then
+	      iSat_mask  <= shift_right(storeSig * signed(BRAMret), 13);
+	    else
+	      iSat_mask  <= shift_right(storeSig * signed(BRAMret), 2);
+	    end if;
 	data_valid <= '1';
       else
 	data_valid <= '0';
@@ -113,38 +119,72 @@ begin  -- architecture Behavioral
   -- outputs: BRAM_addr, waitBRAM
   BRAM_proc : process (adc_clk) is
     variable divider_int : signed(13 downto 0) := (others => '0');
-    variable divider_rem : signed(11 downto 0) := (others => '0');
+    variable divider_rem : signed(9 downto 0) := (others => '0');
     variable addr_mask	 : integer	       := 0;
   begin	 -- process BRAM_proc
     if rising_edge(adc_clk) then
       if index = '1' then
 	-- Extracting the integer part and the fractional part returned by the
 	-- divider core to use in the bram address mapping
-	divider_rem := signed(divider_tdata(11 downto 0));
-	divider_int := signed(divider_tdata(25 downto 12));
+	divider_rem := signed(divider_tdata(9 downto 0));
+	divider_int := signed(divider_tdata(23 downto 10));
 	int_store   <= to_integer(divider_int);
 	rem_store   <= to_integer(divider_rem);
-	if divider_int = to_signed(-4, 14) then
+	if divider_int = to_signed(-8, 14) then
 	  addr_mask := 0;
-	elsif divider_int = to_signed(-3, 14) then
-	  addr_mask := 2048 + to_integer(divider_rem);
+	  calc_switch <= '1';
+	elsif divider_int = to_signed(-7, 14) then
+	  addr_mask := 1024 + (2*to_integer(divider_rem));
+	  calc_switch <= '1';
+	elsif divider_int = to_signed(-6, 14) then
+      addr_mask := 2048 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
+    elsif divider_int = to_signed(-5, 14) then
+      addr_mask := 3072 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
+    elsif divider_int = to_signed(-4, 14) then
+      addr_mask := 4096 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
+    elsif divider_int = to_signed(-3, 14) then
+      addr_mask := 5120 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
 	elsif divider_int = to_signed(-2, 14) then
-	  addr_mask := 4096 + to_integer(divider_rem);
+	  addr_mask := 6144 + (2*to_integer(divider_rem));
+	  calc_switch <= '1';
 	elsif divider_int = to_signed(-1, 14) then
-	  addr_mask := 6144 + to_integer(divider_rem);
+	  addr_mask := 7168 + (2*to_integer(divider_rem));
+	  calc_switch <= '1';
 	elsif divider_int = to_signed(0, 14) then
-	  addr_mask := 8192 + to_integer(divider_rem);
+	  addr_mask := 8192 + (2*to_integer(divider_rem));
+	  calc_switch <= '0';
 	elsif divider_int = to_signed(1, 14) then
-	  addr_mask := 10240 + to_integer(divider_rem);
+	  addr_mask := 9216 + (2*to_integer(divider_rem));
+	  calc_switch <= '1';
 	elsif divider_int = to_signed(2, 14) then
-	  addr_mask := 12288 + to_integer(divider_rem);
+	  addr_mask := 10240 + (2*to_integer(divider_rem));
+	  calc_switch <= '1';
 	elsif divider_int = to_signed(3, 14) then
-	  addr_mask := 14336 + to_integer(divider_rem);
+	  addr_mask := 11264 + (2*to_integer(divider_rem));
+	  calc_switch <= '1';
+	elsif divider_int = to_signed(4, 14) then
+      addr_mask := 12288 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
+    elsif divider_int = to_signed(5, 14) then
+      addr_mask := 13312 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
+    elsif divider_int = to_signed(6, 14) then
+      addr_mask := 14336 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
+    elsif divider_int = to_signed(7, 14) then
+      addr_mask := 15360 + (2*to_integer(divider_rem));
+      calc_switch <= '1';
 	else
-	  if divider_int < to_signed(-4, 14) then
+	  if divider_int < to_signed(-8, 14) then
 	    addr_mask := 0;
-	  elsif divider_int >= to_signed(4, 14) then
+	    calc_switch <= '1';
+	  elsif divider_int >= to_signed(8, 14) then
 	    addr_mask := 16383;
+	    calc_switch <= '1';
 	  end if;
 	end if;
 	addr_mask_store <= addr_mask;

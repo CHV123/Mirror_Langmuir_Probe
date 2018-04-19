@@ -106,7 +106,7 @@ set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.use_bram_blo
 set_property -dict [list CONFIG.Write_Width_A {16} CONFIG.Write_Depth_A {16384} CONFIG.Read_Width_A {16}] [get_bd_cells iSat_SPR]
 set_property -dict [list CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled}] [get_bd_cells iSat_SPR]
 set_property -dict [list CONFIG.Register_PortA_Output_of_Memory_Primitives {true}] [get_bd_cells iSat_SPR]
-set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charliev/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/oneexp_lut.coe}] [get_bd_cells iSat_SPR]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charliev/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/iSat_lut.coe}] [get_bd_cells iSat_SPR]
 set_property -dict [list CONFIG.Fill_Remaining_Memory_Locations {true} CONFIG.Use_RSTA_Pin {false}] [get_bd_cells iSat_SPR]
 
 # Connect up the block to iSat

@@ -25,7 +25,7 @@ architecture test_bench of tb_iSat is
       volt_in       : in std_logic_vector(13 downto 0);  -- Voltage input
       volt1         : in std_logic_vector(13 downto 0);  -- Fist bias voltage in cycle
       clk_en        : in std_logic;     -- Clock Enable to set period start
-      divider_tdata : in std_logic_vector(31 downto 0);
+      divider_tdata : in std_logic_vector(23 downto 0);
       divider_tvalid : in std_logic;
 
       divisor_tdata   : out std_logic_vector(15 downto 0);
@@ -47,7 +47,7 @@ architecture test_bench of tb_iSat is
       s_axis_dividend_tvalid : in  std_logic;
       s_axis_dividend_tdata  : in  std_logic_vector(15 downto 0);
       m_axis_dout_tvalid     : out std_logic;
-      m_axis_dout_tdata      : out std_logic_vector(31 downto 0)
+      m_axis_dout_tdata      : out std_logic_vector(23 downto 0)
       );
   end component;
   -- Divider generator core ------------------
@@ -73,9 +73,9 @@ architecture test_bench of tb_iSat is
   signal Temp          : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(100, 16));  -- Temperature input
   signal BRAMret       : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(0, 16));  -- data returned by BRAM
   signal volt_in       : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(200, 14));  -- Voltage input
-  signal volt1         : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(-300, 14));  -- Fist bias voltage in cycle
+  signal volt1         : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(-199, 14));  -- Fist bias voltage in cycle
   signal clk_en        : std_logic                     := '0';  -- Clock Enable to set period start
-  signal divider_tdata : std_logic_vector(31 downto 0) := (others => '0');
+  signal divider_tdata : std_logic_vector(23 downto 0) := (others => '0');
   signal divider_tvalid : std_logic := '0';
 
 

@@ -125,4 +125,47 @@ set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Wri
 connect_bd_net [get_bd_pins blk_mem_gen_0/clka] [get_bd_pins adc_dac/adc_clk]
 connect_bd_net [get_bd_pins blk_mem_gen_0/douta] [get_bd_pins current_response_0/Expo_result]
 ##################################### BRAM Module ###################################################################
+<<<<<<< HEAD
+=======
+
+##################################### Profile Sweeper ###############################################################
+connect_bd_net [get_bd_pins Profile_Sweep_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins Profile_Sweep_0/Profile_address] [get_bd_pins blk_mem_gen_ISAT/addra]
+connect_bd_net [get_bd_pins Profile_Sweep_0/Profile_address] [get_bd_pins blk_mem_gen_Temp/addra]
+connect_bd_net [get_bd_pins Profile_Sweep_0/Profile_address] [get_bd_pins blk_mem_gen_Vfloating/addra]
+##################################### Profile Sweeper ###############################################################
+
+##################################### ISAT MemBlock   ##################################################################
+set_property -dict [list CONFIG.use_bram_block {Stand_Alone} CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Write_Enable {false} CONFIG.Byte_Size {9} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {8192} CONFIG.Read_Width_A {14} CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {13} CONFIG.Read_Width_B {13} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Use_RSTA_Pin {false} CONFIG.EN_SAFETY_CKT {false}] [get_bd_cells blk_mem_gen_ISAT]
+connect_bd_net [get_bd_pins blk_mem_gen_ISAT/clka] [get_bd_pins adc_dac/adc_clk]
+
+##################################### ISAT MemBlock ####################################################################
+
+##################################### Temp MemBlock ###################################################################
+set_property -dict [list CONFIG.use_bram_block {Stand_Alone} CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Write_Enable {false} CONFIG.Byte_Size {9} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {8192} CONFIG.Read_Width_A {14} CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {13} CONFIG.Read_Width_B {13} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Use_RSTA_Pin {false} CONFIG.EN_SAFETY_CKT {false}] [get_bd_cells blk_mem_gen_Temp]
+connect_bd_net [get_bd_pins blk_mem_gen_Temp/clka] [get_bd_pins adc_dac/adc_clk]
+
+##################################### Temp MemBlock ###################################################################
+
+##################################### Vfloating MemBlock ###################################################################
+set_property -dict [list CONFIG.use_bram_block {Stand_Alone} CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Write_Enable {false} CONFIG.Byte_Size {9} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {8192} CONFIG.Read_Width_A {14} CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {13} CONFIG.Read_Width_B {13} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Use_RSTA_Pin {false} CONFIG.EN_SAFETY_CKT {false}] [get_bd_cells blk_mem_gen_Vfloating]
+connect_bd_net [get_bd_pins blk_mem_gen_Vfloating/clka] [get_bd_pins adc_dac/adc_clk]
+
+##################################### Vfloating MemBlock ###################################################################
+
+##################################### input control block #################################################################
+connect_bd_net [get_bd_pins input_control_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins ctl/Switch] [get_bd_pins input_control_0/switch]
+connect_bd_net [get_bd_pins ctl/Temperature] [get_bd_pins input_control_0/T_e_const]
+connect_bd_net [get_bd_pins ctl/ISat] [get_bd_pins input_control_0/ISat_const]
+connect_bd_net [get_bd_pins ctl/Vfloating] [get_bd_pins input_control_0/V_f_const]
+connect_bd_net [get_bd_pins blk_mem_gen_ISAT/douta] [get_bd_pins input_control_0/ISat_prof]
+connect_bd_net [get_bd_pins blk_mem_gen_Temp/douta] [get_bd_pins input_control_0/T_e_prof]
+connect_bd_net [get_bd_pins blk_mem_gen_Vfloating/douta] [get_bd_pins input_control_0/V_f_prof]
+connect_bd_net [get_bd_pins input_control_0/T_e] [get_bd_pins current_response_0/T_electron_in]
+connect_bd_net [get_bd_pins input_control_0/V_f] [get_bd_pins current_response_0/V_floating]
+connect_bd_net [get_bd_pins input_control_0/Isat] [get_bd_pins current_response_0/I_sat]
+##################################### input control block #################################################################
+
+>>>>>>> e54e2f90958f58bfb5cd0f359cd24423de5b730d
 ##################################### Connected all the Blocks ######################################################

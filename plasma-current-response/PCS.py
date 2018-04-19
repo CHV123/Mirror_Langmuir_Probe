@@ -22,11 +22,11 @@ class PCS(object):
         pass
 
     @command()
-    def set_Isat(self, Isat):
+    def set_ISat(self, ISat):
         pass
 
     @command()
-    def set_Temperture(self, Temperture):
+    def set_Temperature(self, Temperature):
         pass
 
 

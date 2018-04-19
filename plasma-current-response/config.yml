@@ -28,8 +28,14 @@ memory:
 
 control_registers:
   - led
+<<<<<<< HEAD
   - trigger
   - Isat
+=======
+  - Switch
+  - Temperature
+  - ISat
+>>>>>>> e54e2f90958f58bfb5cd0f359cd24423de5b730d
   - Vfloating
   - Temperture
   - Resistence

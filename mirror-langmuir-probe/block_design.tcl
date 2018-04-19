@@ -233,11 +233,7 @@ connect_bd_net [get_bd_pins set_voltage/Isat_en] [get_bd_pins isat_calc/clk_en]
 connect_bd_net [get_bd_pins set_voltage/vFloat_en] [get_bd_pins vfloat_calc/clk_en]
 connect_bd_net [get_bd_pins set_voltage/volt1] [get_bd_pins isat_calc/volt1]
 connect_bd_net [get_bd_pins set_voltage/volt2] [get_bd_pins temp_calc/volt2]
-# Need slice to connect to LEDs
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 slice_volt_out_led_13_6
-set_property -dict [list CONFIG.DIN_TO {6} CONFIG.DIN_FROM {13} CONFIG.DIN_WIDTH {14} CONFIG.DIN_TO {6} CONFIG.DIN_FROM {13} CONFIG.DOUT_WIDTH {8}] [get_bd_cells slice_volt_out_led_13_6]
-connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins slice_volt_out_led_13_6/Din]
-connect_bd_net [get_bd_ports led_o] [get_bd_pins slice_volt_out_led_13_6/Dout]
+
 ###########################################################################################################
 
 # Making sure clocks are synchronous
@@ -301,17 +297,25 @@ create_bd_cell -type ip -vlnv PSFC:user:acquire_trigger:1.0 acquire_trigger
 
 connect_bd_net [get_bd_pins acquire_trigger/adc_clk] [get_bd_pins adc_dac/adc_clk]
 
-connect_bd_net [get_bd_pins ctl/Acqusition_length] [get_bd_pins acquire_trigger/AcqTime]
-connect_bd_net [get_bd_pins acquire_trigger/trigger] [get_bd_pins ctl/Trigger]
+connect_bd_net [get_bd_pins ctl/Acquisition_length] [get_bd_pins acquire_trigger/AcqTime]
 connect_bd_net [get_bd_pins acquire_trigger/acquire_valid] [get_bd_pins data_collector/clk_en]
 connect_bd_net [get_bd_pins acquire_trigger/timestamp] [get_bd_pins sts/Timestamp]
 
-# Taking a bit from the trigger to implement the stream enable
-create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_stream
-connect_bd_net [get_bd_pins ctl/Trigger] [get_bd_pins trigger_to_stream/Din]
-connect_bd_net [get_bd_pins trigger_to_stream/Dout] [get_bd_pins acquire_trigger/stream]
-set_property -dict [list CONFIG.DIN_TO {1} CONFIG.DIN_FROM {1} CONFIG.DOUT_WIDTH {1}] [get_bd_cells trigger_to_stream]
+# Taking a bit from the trigger to implement the acquisition trigger
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_trigger
+connect_bd_net [get_bd_pins ctl/Trigger] [get_bd_pins trigger_to_trigger/Din]
+connect_bd_net [get_bd_pins trigger_to_trigger/Dout] [get_bd_pins acquire_trigger/trigger]
+set_property -dict [list CONFIG.DIN_TO {0} CONFIG.DIN_FROM {0} CONFIG.DOUT_WIDTH {1} CONFIG.DIN_WIDTH {32}] [get_bd_cells trigger_to_trigger]
 
+# Need slice to connect to LEDs
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 led_slice
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 led_concat
+set_property -dict [list CONFIG.DIN_TO {0} CONFIG.DIN_FROM {6} CONFIG.DIN_WIDTH {18} CONFIG.DOUT_WIDTH {6}] [get_bd_cells led_slice]
+set_property -dict [list CONFIG.IN0_WIDTH {1} CONFIG.IN1_WIDTH {7}] [get_bd_cells led_concat]
+connect_bd_net [get_bd_pins module_const/dout] [get_bd_pins led_slice/Din]
+connect_bd_net [get_bd_pins led_slice/Dout] [get_bd_pins led_concat/In0]
+connect_bd_net [get_bd_pins data_collector/tvalid] [get_bd_pins led_concat/In1]
+connect_bd_net [get_bd_ports led_o] [get_bd_pins led_concat/Dout]
 
-
+validate_bd_design
 

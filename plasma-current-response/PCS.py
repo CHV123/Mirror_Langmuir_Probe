@@ -38,11 +38,6 @@ class PCS(object):
     @command()
     def set_Resistence(self, Resistence):
         pass
-    @command()
-    def set_Switch(self, Switch):
-        pass
-
-
 
     @command()
     def get_Current(self):

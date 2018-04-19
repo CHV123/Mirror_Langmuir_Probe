@@ -15,7 +15,7 @@ entity SetVolts is
 
   generic (
     period     : integer := 38;
-    Temp_guess : integer := 1000;
+    Temp_guess : integer := 50;
     negBias    : integer := -3;
     posBias    : integer := 1
     );
@@ -73,7 +73,7 @@ begin  -- architecture Behavioral
   begin	 -- process temp_check_proc
     if rising_edge(adc_clk) then
       if Temp_valid = '1' then
-	if signed(Temp) > to_signed(0, Temp'length) then
+	if to_integer(signed(Temp)) > to_integer(to_signed(0, Temp'length)) then
 	  TempMask	 <= signed(Temp);
 	  TempMask_proxy := signed(Temp);
 	else
@@ -167,7 +167,6 @@ begin  -- architecture Behavioral
     end if;
   end process en_calc_proc;
 
-
   -- Setting the output to various voltage levels
   set_proc : process(adc_clk)
     variable outMask	: signed(20 downto 0) := (others => '0');
@@ -180,7 +179,7 @@ begin  -- architecture Behavioral
 	elsif level = 1 then
 	  outMask := "0" & volt2_proxy;
 	elsif level = 2 then
-	  outMask := (others => '0');
+	  outMask := to_signed(0, outMask'length);
 	end if;
       end if;
       output	 <= outMask(13 downto 0);

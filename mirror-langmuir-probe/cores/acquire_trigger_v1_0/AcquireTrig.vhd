@@ -16,38 +16,37 @@ entity AcquireTrig is
     adc_clk_period : integer := 125
     );
   port (
-    adc_clk : in std_logic;		-- adc input clock
+    adc_clk : in std_logic;             -- adc input clock
     AcqTime : in std_logic_vector(29 downto 0);
-    stream  : in std_logic;
     trigger : in std_logic;
 
-    timestamp	  : out std_logic_vector(24 downto 0);
+    timestamp     : out std_logic_vector(24 downto 0);
     acquire_valid : out std_logic
     );
 
 end entity AcquireTrig;
 
 architecture Behavioral of AcquireTrig is
-  signal trig_reset : std_logic := '0';
-  signal acquire : std_logic := '0';
+  signal trig_reset      : std_logic              := '0';
+  signal acquire         : std_logic              := '0';
   signal acquire_counter : integer range 0 to 250 := 0;
-  signal acquire_time : integer := 0;
+  signal acquire_time    : integer                := 0;
 begin  -- architecture Behavioral
 
   acquire_valid <= acquire;
-  timestamp <= std_logic_vector(to_unsigned(acquire_time, timestamp'length));
+  timestamp     <= std_logic_vector(to_unsigned(acquire_time, timestamp'length));
 
   -- purpose: process to start acquisition and triggering
   -- type   : sequential
   -- inputs : adc_clk, trigger
   -- outputs: trig_reset
   trig_reset_proc : process (adc_clk) is
-  begin	 -- process timestamp_proc
-    if rising_edge(adc_clk) then	-- rising clock edge
-      if trigger = '1' then		-- synchronous reset (active high)
-	trig_reset <= '1';
+  begin  -- process timestamp_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if trigger = '1' then             -- synchronous reset (active high)
+        trig_reset <= '1';
       elsif trigger = '0' then
-	trig_reset <= '0';
+        trig_reset <= '0';
       end if;
     end if;
   end process trig_reset_proc;
@@ -56,17 +55,17 @@ begin  -- architecture Behavioral
   -- type   : sequential
   -- inputs : adc_clk, acquire
   -- outputs: acquire
-  start_proc: process (adc_clk) is
+  start_proc : process (adc_clk) is
   begin  -- process start_proc
-    if rising_edge(adc_clk) then  	-- rising clock edge
-      if acquire = '0' then  		-- synchronous reset (active high)
-	if trigger = '1' and trig_reset = '0' then
-	  acquire <= '1';
-	end if;
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if acquire = '0' then             -- synchronous reset (active high)
+        if trigger = '1' and trig_reset = '0' then
+          acquire <= '1';
+        end if;
       else
-	if acquire_time = to_integer(unsigned(AcqTime)) then
-	  acquire <= '0';
-	end if;
+        if acquire_time = to_integer(unsigned(AcqTime)) then
+          acquire <= '0';
+        end if;
       end if;
     end if;
   end process start_proc;
@@ -75,17 +74,17 @@ begin  -- architecture Behavioral
   -- type   : sequential
   -- inputs : adc_clk, acquire
   -- outputs: timestamp
-  counter_proc: process (adc_clk) is
+  counter_proc : process (adc_clk) is
   begin  -- process timestamp_proc
-    if rising_edge(adc_clk) then  	-- rising clock edge
-      if acquire = '1' then  		-- synchronous reset (active high)
-	 if acquire_counter = (adc_clk_period -1) then
-	   acquire_counter <= 0;
-	 else
-	   acquire_counter <= acquire_counter + 1;
-	 end if;
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if acquire = '1' then             -- synchronous reset (active high)
+        if acquire_counter = (adc_clk_period -1) then
+          acquire_counter <= 0;
+        else
+          acquire_counter <= acquire_counter + 1;
+        end if;
       else
-	acquire_counter <= 0;	
+        acquire_counter <= 0;
       end if;
     end if;
   end process counter_proc;
@@ -94,16 +93,16 @@ begin  -- architecture Behavioral
   -- type   : sequential
   -- inputs : adc_clk, acquire_counter
   -- outputs: timestamp
-  timestamp_proc: process (adc_clk) is
+  timestamp_proc : process (adc_clk) is
   begin  -- process counter_proc
-    if rising_edge(adc_clk) then  	-- rising clock edge
-      if acquire_counter = (adc_clk_period - 1) then  	-- synchronous reset (active high)
-	acquire_time <= acquire_time + 1;
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if acquire_counter = (adc_clk_period - 1) then  -- synchronous reset (active high)
+        acquire_time <= acquire_time + 1;
       end if;
       if acquire_time = to_integer(unsigned(AcqTime)) then
-	acquire_time <= 0;
+        acquire_time <= 0;
       end if;
     end if;
   end process timestamp_proc;
-  
+
 end architecture Behavioral;

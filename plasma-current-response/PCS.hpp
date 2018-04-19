@@ -60,10 +60,6 @@ class PCS
         ctl.write<reg::Resistence>(Resistence);
     }
 
-    void set_Switch(uint32_t Switch) {
-        ctl.write<reg::Switch>(Switch);
-    }
-
     uint32_t get_Current() {
         uint32_t Current_value = sts.read<reg::Current>();
         return Current_value;

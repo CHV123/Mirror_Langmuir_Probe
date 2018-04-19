@@ -20,38 +20,36 @@ namespace Fifo_regs {
 }
 
 //constexpr uint32_t dac_size = mem::dac_range/sizeof(uint32_t);
+constexpr uint32_t adc_buff_size = 16777216;
 
-
-class MLP
-{
+class MLP {
 public:
-  MLP(Context& ctx)
-    : ctl(ctx.mm.get<mem::control>())
+  MLP(Context& ctx_)
+    : ctx(ctx_)
+    , ctl(ctx.mm.get<mem::control>())
     , sts(ctx.mm.get<mem::status>())
     , adc_fifo_map(ctx.mm.get<mem::adc_fifo>())
-    // , dac_map(ctx.mm.get<mem::dac>()) 
+    , adc_data(adc_buff_size)
   {
     start_fifo_acquisition();
   }
-  
-  // Trigger
- 
-  void trig_pulse() {
-    ctl.set_bit<reg::Trigger, 0>();
-    ctl.clear_bit<reg::Trigger, 0>();
-  }
+    
   
   //  MLP
   void set_led(uint32_t led) {
     ctl.write<reg::led>(led);
   }
 
+  void set_trigger(uint32_t trigger) {
+    ctl.write<reg::Trigger>(trigger);
+  }
+
   void set_period(uint32_t period) {
     ctl.write<reg::Period>(period);
   }
 
-  void set_acquistion_length(uint32_t acquisition_length) {
-    ctl.write<reg::Acqusition_length>(acquisition_length);
+  void set_acquisition_length(uint32_t acquisition_length) {
+    ctl.write<reg::Acquisition_length>(acquisition_length);
   }
 
   uint32_t get_temperature() {
@@ -117,7 +115,7 @@ public:
   
   
 private:
-  //Context& ctx;
+  Context& ctx;
   Memory<mem::control>& ctl;
   Memory<mem::status>& sts;
   Memory<mem::adc_fifo>& adc_fifo_map;
@@ -144,9 +142,9 @@ inline void MLP::start_fifo_acquisition() {
 }
 
 inline void MLP::fifo_acquisition_thread() {
-  constexpr auto fifo_sleep_for = std::chrono::microseconds(60);
+  constexpr auto fifo_sleep_for = std::chrono::microseconds(5000);
   fifo_acquisition_started = true;
-  //ctx.log<INFO>("Starting fifo acquisition");
+  ctx.log<INFO>("Starting fifo acquisition");
   adc_data.reserve(16777216);
   adc_data.resize(0);
   //empty_vector.resize(0);
@@ -166,7 +164,7 @@ inline void MLP::fifo_acquisition_thread() {
     }
     
     dropped = fill_buffer(dropped);
-    
+    //std::this_thread::sleep_for(fifo_sleep_for);
   }// While loop
 }
 
@@ -174,7 +172,7 @@ inline void MLP::fifo_acquisition_thread() {
 inline uint32_t MLP::fill_buffer(uint32_t dropped) {
     // Retrieving the number of samples to collect
   uint32_t samples=get_fifo_length();
-  
+  //ctx.log<INFO>("Samples: %d", samples); 
   // Checking for dropped samples
   if (samples >= 32768){  	
     dropped += 1;

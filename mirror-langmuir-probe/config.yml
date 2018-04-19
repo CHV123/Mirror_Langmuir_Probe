@@ -31,7 +31,7 @@ control_registers:
   - led
   - Trigger
   - Period
-  - Acqusition_length
+  - Acquisition_length
 
 status_registers:
   - adc[n_adc]

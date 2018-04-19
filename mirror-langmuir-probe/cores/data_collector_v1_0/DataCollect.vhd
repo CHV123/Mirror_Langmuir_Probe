@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------
--- Module to set 3 different voltages levels for inital MLP demonstration
+-- Module to organise and store data for the MLP project
 -- Started on March 26th by Charlie Vincent
 --
 -- Adjust variable is to lengthen period to a number that is indivisible by three
@@ -56,15 +56,15 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: data
   volt_collect : process (adc_clk) is
-    variable counter : unsigned(2 downto 0)          := (others => '0');
+    variable counter : unsigned(7 downto 0)          := (others => '0');
     variable collate : std_logic_vector(31 downto 0) := (others => '0');
   begin  -- process data_collect
     if rising_edge(adc_clk) then
       if clk_en = '1' then
         if switch = '1' then
-          collate := "0" & std_logic_vector(counter) & v_in & v_out;
+          collate := "0" & std_logic_vector(counter) & "0" & v_in(13 downto 3) & v_out(13 downto 3);
         elsif switch = '0' then
-          data_hold_v <= "0" & std_logic_vector(counter) & v_in & v_out & collate;
+          data_hold_v <= "0" & std_logic_vector(counter) & "0" & v_in(13 downto 3) & v_out(13 downto 3) & collate;
         end if;
         counter := counter + 1;
       else
@@ -78,12 +78,12 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: v_data
   var_collect : process (adc_clk) is
-    variable counter : unsigned(14 downto 0) := (others => '0');
+    variable counter : unsigned(13 downto 0) := (others => '0');
   begin  -- process var_collect
     if rising_edge(adc_clk) then
       if clk_en = '1' then
         if Temp_valid = '1' then
-          data_hold_t <= "1" & std_logic_vector(counter) & Temp & iSat & vFloat;
+          data_hold_t <= "1" & std_logic_vector(counter) & Temp & iSat(15 downto 15) & "1" & iSat(14 downto 0) & vFloat;
           temp_set    <= '1';
         end if;
         if delivered = '1' and temp_set = '1' then

@@ -17,10 +17,11 @@ class MLP(object):
         self.adc = np.zeros((2, self.n_pts))
         self.dac = np.zeros((2, self.n_pts))
 
-    @command()
-    def trig_pulse(self):
-        pass
 
+    @command()
+    def set_trigger(self, trigger):
+        pass
+    
     @command()
     def set_led(self, led):
         pass
@@ -30,7 +31,7 @@ class MLP(object):
         pass
 
     @command()
-    def set_acquistion_length(self, period):
+    def set_acquisition_length(self, period):
         pass
     
     @command()

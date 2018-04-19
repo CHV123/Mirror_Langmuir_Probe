@@ -26,19 +26,25 @@ def int2signed(convInt):
     return retBin
 ##########################################################
 
-driver.set_period(1000)
-# driver.set_acquistion_length(10)
+driver.set_period(1250)
+driver.set_acquisition_length(int(250))
 
-# while True:
-#     try:
-#         time.sleep(0.2)
-#         samples = driver.get_buffer_length()
-#         print(samples)
-#     except KeyboardInterrupt:
-#         break
+driver.set_trigger(int(0b11111111111111111111111111111111))
+driver.set_trigger(0)
 
-# dataArray = driver.get_MLP_data()
+while True:
+    try:
+        time.sleep(0.2)
+        samples = driver.get_buffer_length()
+        if samples == 0:
+            break
+        print(samples)
+    except KeyboardInterrupt:
+        break
 
-# saveStr = "MLP_test_data"
-# print(saveStr)
-# np.save(saveStr, dataArray)
+dataArray = driver.get_MLP_data()
+print(len(dataArray))
+
+saveStr = "MLP_test_data"
+print(saveStr)
+np.save(saveStr, dataArray)

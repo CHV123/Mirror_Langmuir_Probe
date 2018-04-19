@@ -19,22 +19,21 @@ architecture test_bench of tb_iSat is
   component iSatCalc is
     port (
       adc_clk       : in std_logic;     -- adc input clock
-      vFloat        : in signed(15 downto 0);  -- Floating Voltage input
-      Temp          : in signed(15 downto 0);  -- Temperature input
-      BRAMret       : in signed(13 downto 0);  -- data returned by BRAM
-      volt_in       : in signed(13 downto 0);  -- Voltage input
-      volt1         : in signed(13 downto 0);  -- Fist bias voltage in cycle
+      vFloat        : in std_logic_vector(15 downto 0);  -- Floating Voltage input
+      Temp          : in std_logic_vector(15 downto 0);  -- Temperature input
+      BRAMret       : in std_logic_vector(15 downto 0);  -- data returned by BRAM
+      volt_in       : in std_logic_vector(13 downto 0);  -- Voltage input
+      volt1         : in std_logic_vector(13 downto 0);  -- Fist bias voltage in cycle
       clk_en        : in std_logic;     -- Clock Enable to set period start
       divider_tdata : in std_logic_vector(31 downto 0);
-      divider_tuser : in std_logic_vector(1 downto 0);
+      divider_tvalid : in std_logic;
 
       divisor_tdata   : out std_logic_vector(15 downto 0);
       divisor_tvalid  : out std_logic;
       dividend_tdata  : out std_logic_vector(15 downto 0);
       dividend_tvalid : out std_logic;
-      dividend_tuser  : out std_logic_vector(1 downto 0);
       BRAM_addr       : out std_logic_vector(13 downto 0);  -- BRAM address out
-      iSat            : out signed(15 downto 0);  -- Saturation current
+      iSat            : out std_logic_vector(15 downto 0);  -- Saturation current
       data_valid      : out std_logic);  -- valid to propagate to float and temp block
   end component iSatCalc;
   --------------------------------------------------------------------------------------------
@@ -46,10 +45,8 @@ architecture test_bench of tb_iSat is
       s_axis_divisor_tvalid  : in  std_logic;
       s_axis_divisor_tdata   : in  std_logic_vector(15 downto 0);
       s_axis_dividend_tvalid : in  std_logic;
-      s_axis_dividend_tuser  : in  std_logic_vector(1 downto 0);
       s_axis_dividend_tdata  : in  std_logic_vector(15 downto 0);
       m_axis_dout_tvalid     : out std_logic;
-      m_axis_dout_tuser      : out std_logic_vector(1 downto 0);
       m_axis_dout_tdata      : out std_logic_vector(31 downto 0)
       );
   end component;
@@ -61,8 +58,8 @@ architecture test_bench of tb_iSat is
       clka : IN STD_LOGIC;
       wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
       addra : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-      dina : IN STD_LOGIC_VECTOR(13 DOWNTO 0);
-      douta : OUT STD_LOGIC_VECTOR(13 DOWNTO 0)
+      dina : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+      douta : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
     );
   END COMPONENT;
   -- COMP_TAG_END ------ End COMPONENT Declaration ------------
@@ -72,14 +69,14 @@ architecture test_bench of tb_iSat is
 
   -- input signals
   signal adc_clk       : std_logic                     := '0';
-  signal vFloat        : signed(15 downto 0)           := to_signed(-3820, 16);  -- Floating Voltage input
-  signal Temp          : signed(15 downto 0)           := to_signed(500, 16);  -- Temperature input
-  signal BRAMret       : signed(13 downto 0)           := to_signed(0, 14);  -- data returned by BRAM
-  signal volt_in       : signed(13 downto 0)           := to_signed(1, 14);  -- Voltage input
-  signal volt1         : signed(13 downto 0)           := to_signed(-4000, 14);  -- Fist bias voltage in cycle
+  signal vFloat        : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(0, 16));  -- Floating Voltage input
+  signal Temp          : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(100, 16));  -- Temperature input
+  signal BRAMret       : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(0, 16));  -- data returned by BRAM
+  signal volt_in       : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(200, 14));  -- Voltage input
+  signal volt1         : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(-300, 14));  -- Fist bias voltage in cycle
   signal clk_en        : std_logic                     := '0';  -- Clock Enable to set period start
   signal divider_tdata : std_logic_vector(31 downto 0) := (others => '0');
-  signal divider_tuser : std_logic_vector(1 downto 0)  := (others => '0');
+  signal divider_tvalid : std_logic := '0';
 
 
   -- output signals
@@ -87,9 +84,8 @@ architecture test_bench of tb_iSat is
   signal divisor_tvalid  : std_logic                     := '0';
   signal dividend_tdata  : std_logic_vector(15 downto 0) := (others => '0');
   signal dividend_tvalid : std_logic                     := '0';
-  signal dividend_tuser  : std_logic_vector(1 downto 0)  := (others => '0');
   signal BRAM_addr       : std_logic_vector(13 downto 0) := (others => '0');
-  signal iSat_out        : signed(15 downto 0)           := (others => '0');  -- Saturation current
+  signal iSat_out        : std_logic_vector(15 downto 0)           := (others => '0');  -- Saturation current
   signal data_valid      : std_logic                     := '0';  -- valid to propagate to float and temp block
   -- Signals for iSatCalc Module
   ---------------------------------------------------------------------------------------------------
@@ -98,8 +94,8 @@ architecture test_bench of tb_iSat is
   -- input signals
   signal addra : std_logic_vector(13 downto 0) := (others => '0');
   signal wea : std_logic_vector(0 downto 0) := (others => '0');
-  signal dina : std_logic_vector(13 downto 0) := (others => '0');
-  signal douta : std_logic_vector(13 downto 0) := (others => '0');
+  signal dina : std_logic_vector(15 downto 0) := (others => '0');
+  signal douta : std_logic_vector(15 downto 0) := (others => '0');
 
   -- Clock periods
   constant adc_clk_period : time := 8 ns;
@@ -119,13 +115,12 @@ begin  -- architecture behaviour
       volt1         => volt1,
       clk_en        => clk_en,
       divider_tdata => divider_tdata,
-      divider_tuser => divider_tuser,
+      divider_tvalid => divider_tvalid,
 
       divisor_tdata   => divisor_tdata,
       divisor_tvalid  => divisor_tvalid,
       dividend_tdata  => dividend_tdata,
       dividend_tvalid => dividend_tvalid,
-      dividend_tuser  => dividend_tuser,
       BRAM_addr       => BRAM_addr,
       iSat            => iSat_out,
       data_valid      => data_valid
@@ -138,9 +133,8 @@ begin  -- architecture behaviour
       s_axis_divisor_tvalid  => divisor_tvalid,
       s_axis_divisor_tdata   => divisor_tdata,
       s_axis_dividend_tvalid => dividend_tvalid,
-      s_axis_dividend_tuser  => dividend_tuser,
       s_axis_dividend_tdata  => dividend_tdata,
-      m_axis_dout_tuser      => divider_tuser,
+      m_axis_dout_tvalid      => divider_tvalid,
       m_axis_dout_tdata      => divider_tdata
       );
   -- INST_TAG_END ------ End INSTANTIATION Template --------- 
@@ -156,7 +150,7 @@ begin  -- architecture behaviour
     );
   -- INST_TAG_END ------ End INSTANTIATION Template ---------
 
-  BRAMret <= signed(douta);
+  BRAMret <= douta;
   addra <= BRAM_addr;
   
   -- Clock process definitions
@@ -175,7 +169,7 @@ begin  -- architecture behaviour
   temp_proc: process is
   begin  -- process temp_proc
     wait for adc_clk_period*50;
-    temp <= temp + to_signed(200, 14);
+    temp <= std_logic_vector(signed(temp));-- + to_signed(200, 14));
   end process temp_proc;
 
   -- purpose: Stimulation process to provide voltage input
@@ -184,8 +178,8 @@ begin  -- architecture behaviour
   -- outputs: volt_in
   voltInput : process
   begin  -- process voltInput
-    wait for adc_clk_period;
-    volt_in <= volt_in + 200;
+    wait for adc_clk_period*60;
+    volt_in <= std_logic_vector(signed(volt_in));-- + to_signed(200, 14));
   end process voltInput;
 
   -- Stimulus process
@@ -196,7 +190,7 @@ begin  -- architecture behaviour
     if counter = 0 then
       clk_en  <= '1';
       counter := counter + 1;
-    elsif counter > 0 and counter < 45 then
+    elsif counter > 0 and counter < 40 then
       clk_en  <= '0';
       counter := counter + 1;
     else

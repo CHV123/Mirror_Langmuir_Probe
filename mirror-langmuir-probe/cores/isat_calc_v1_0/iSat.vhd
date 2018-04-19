@@ -24,13 +24,12 @@ entity iSatCalc is
     volt1	  : in std_logic_vector(13 downto 0);  -- Fist bias voltage in cycle
     clk_en	  : in std_logic;	-- Clock Enable to set period start
     divider_tdata : in std_logic_vector(31 downto 0);
-    divider_tuser : in std_logic_vector(1 downto 0);
+    divider_tvalid : in std_logic;
 
     divisor_tdata   : out std_logic_vector(15 downto 0);
     divisor_tvalid  : out std_logic;
     dividend_tdata  : out std_logic_vector(15 downto 0);
     dividend_tvalid : out std_logic;
-    dividend_tuser  : out std_logic_vector(1 downto 0);
     BRAM_addr	    : out std_logic_vector(13 downto 0);  -- BRAM address out
     iSat	    : out std_logic_vector(15 downto 0);  -- Saturation current
     data_valid	    : out std_logic);  -- valid to propagate to float and temp block
@@ -42,7 +41,7 @@ architecture Behavioral of iSatCalc is
   signal exp_count : integer range 0 to 31 := 0;
   signal exp_en	   : std_logic		   := '0';
   signal exp_ret   : signed(13 downto 0)   := (others => '0');
-  signal index	   : unsigned(1 downto 0)  := (others => '0');
+  signal index	   : std_logic  := '0';
   signal diff_set  : std_logic		   := '0';
   signal waitBRAM  : std_logic		   := '0';  -- Signal to indicate when
 						    -- to wait for the bram return
@@ -56,7 +55,7 @@ architecture Behavioral of iSatCalc is
 
 begin  -- architecture Behavioral
 
-  index <= unsigned(divider_tuser);
+  index <= divider_tvalid;
   iSat	<= std_logic_vector(iSat_mask(15 downto 0));
 
   -- purpose: Process to calculate Saturation current
@@ -92,7 +91,6 @@ begin  -- architecture Behavioral
 	  divisor_tdata <= "00" & std_logic_vector(to_signed(Temp_guess, 14));
 	end if;
 	dividend_tdata	<= "00" &std_logic_vector(to_signed(to_integer(signed(volt1))-to_integer(signed(vFloat)), 14));
-	dividend_tuser	<= std_logic_vector(to_unsigned(1, dividend_tuser'length));
 	dividend_tvalid <= '1';
 	divisor_tvalid	<= '1';
 	diff_set	<= '1';
@@ -102,7 +100,6 @@ begin  -- architecture Behavioral
 	-- necessary as we're sending a tvalid signal
 	divisor_tdata	<= (others => '0');
 	dividend_tdata	<= (others => '0');
-	dividend_tuser	<= (others => '0');
 	dividend_tvalid <= '0';
 	divisor_tvalid	<= '0';
 	diff_set	<= '0';
@@ -120,7 +117,7 @@ begin  -- architecture Behavioral
     variable addr_mask	 : integer	       := 0;
   begin	 -- process BRAM_proc
     if rising_edge(adc_clk) then
-      if index = to_unsigned(1, index'length) then
+      if index = '1' then
 	-- Extracting the integer part and the fractional part returned by the
 	-- divider core to use in the bram address mapping
 	divider_rem := signed(divider_tdata(11 downto 0));

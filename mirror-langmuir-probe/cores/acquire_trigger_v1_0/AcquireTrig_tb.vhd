@@ -6,7 +6,7 @@
 -- Author     : Charles Vincent	 <charliev@cmodws122>
 -- Company    : 
 -- Created    : 2018-04-16
--- Last update: 2018-04-16
+-- Last update: 2018-04-17
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -38,11 +38,23 @@ architecture testbench of AcquireTrig_tb is
 
   -- component ports
   signal adc_clk       : std_logic		       := '0';
+  
   signal AcqTime       : std_logic_vector(29 downto 0) := std_logic_vector(to_unsigned(100, 30));
-  signal stream	       : std_logic		       := '0';
   signal trigger       : std_logic		       := '0';
   signal timestamp     : std_logic_vector(24 downto 0) := (others => '0');
   signal acquire_valid : std_logic		       := '0';
+  
+ 
+  signal Temp_valid : std_logic := '0';
+  signal Temp       : std_logic_vector(15 downto 0) := (others => '0');
+  signal iSat       : std_logic_vector(15 downto 0) := (others => '0');
+  signal vFloat     : std_logic_vector(15 downto 0) := (others => '0');
+  signal v_in       : std_logic_vector(13 downto 0) := (others => '0');
+  signal v_out      : std_logic_vector(13 downto 0) := (others => '0');
+  signal clk_en     : std_logic := '0';
+  
+  signal tvalid : std_logic := '0';
+  signal tdata  : std_logic_vector(63 downto 0) := (others => '0');
 
   constant adc_clk_time : time := 8 ns;
 
@@ -55,23 +67,38 @@ begin  -- architecture testbench
     port map (
       adc_clk	    => adc_clk,
       AcqTime	    => AcqTime,
-      stream	    => stream,
       trigger	    => trigger,
       timestamp	    => timestamp,
       acquire_valid => acquire_valid);
-
+      
+  BUT : entity work.DataCollect
+    port map(
+      adc_clk     => adc_clk,
+      Temp_valid => Temp_valid,
+      Temp       => Temp,
+      iSat       => iSat,
+      vFloat     => vFloat,
+      v_in       => v_in,
+      v_out      => v_out,
+      clk_en     => clk_en,
+      tvalid => tvalid,
+      tdata  => tdata
+      );
+      
   -- clock generation
   adc_clk <= not adc_clk after adc_clk_time/2;
-
+  
+  clk_en <= acquire_valid;
+  
   -- waveform generation
-  WaveGen_Proc : process
+  Trigger_Proc : process
   begin
     wait for adc_clk_time*10;
     trigger <= '1';
     wait for adc_clk_time*2;
     trigger <= '0';
     wait for 120 us;
-  end process WaveGen_Proc;
+  end process Trigger_Proc;
 
 
 

@@ -153,7 +153,7 @@ connect_bd_net [get_bd_pins blk_mem_gen_Vfloating/clka] [get_bd_pins adc_dac/adc
 
 ##################################### input control block #################################################################
 connect_bd_net [get_bd_pins input_control_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins ctl/trigger] [get_bd_pins input_control_0/switch]
+connect_bd_net [get_bd_pins ctl/Switch] [get_bd_pins input_control_0/switch]
 connect_bd_net [get_bd_pins ctl/Temperature] [get_bd_pins input_control_0/T_e_const]
 connect_bd_net [get_bd_pins ctl/ISat] [get_bd_pins input_control_0/ISat_const]
 connect_bd_net [get_bd_pins ctl/Vfloating] [get_bd_pins input_control_0/V_f_const]

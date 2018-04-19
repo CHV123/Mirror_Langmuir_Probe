@@ -34,22 +34,14 @@ class PCS
         start_fifo_acquisition();
     }
 
-    // Trigger
-
-
-    void trig_pulse() {
-        ctl.set_bit<reg::trigger, 0>();
-        ctl.clear_bit<reg::trigger, 0>();
-    }
-
     // PCS generator
 
-    void set_Isat(uint32_t Isat) {
-        ctl.write<reg::Isat>(Isat);
+    void set_ISat(uint32_t ISat) {
+        ctl.write<reg::ISat>(ISat);
     }
 
-    void set_Temperture(uint32_t Temperture) {
-        ctl.write<reg::Temperture>(Temperture);
+    void set_Temperature(uint32_t Temperature) {
+        ctl.write<reg::Temperature>(Temperature);
     }
 
     void set_Vfloating(uint32_t Vfloating) {

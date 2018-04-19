@@ -15,9 +15,9 @@ driver = PCS(client)
 
 
 
-driver.set_Temperture(50)
-driver.set_Isat(2)
-driver.set_Vfloating(20)
+driver.set_Temperature(500)
+driver.set_ISat(2)
+driver.set_Vfloating(0)
 driver.set_Resistence(100)
 driver.set_Switch(1)
 

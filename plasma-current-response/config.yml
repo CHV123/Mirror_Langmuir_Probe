@@ -30,7 +30,7 @@ memory:
 
 control_registers:
   - led
-  - input_switch
+  - Switch
   - Temperature
   - ISat
   - Vfloating

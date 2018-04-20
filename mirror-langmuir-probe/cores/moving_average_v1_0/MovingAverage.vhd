@@ -52,16 +52,27 @@ begin  -- architecture Behavioral
   -- outputs: volt_sum
   sum_proc : process (adc_clk) is
     variable counter : integer range 0 to 63 := 0;
+    variable full_prev : std_logic := '0';
+    variable sum_store : signed(13 downto 0) := (others <= '0');
   begin	 -- process sum_proc
     if rising_edge(adc_clk) then	-- rising clock edge
       if clk_rst = '1' then		-- synchronous reset (active high)
-
+	full <= '0';
+	sum <= (others => '0');
+	counter <= 0;
       else
 	if counter /= scale then
+	  if counter = 0 then
+	    sum_store := signed(shift_right(volt_in, Samples));
+	  end if;
 	  sum <= sum + signed(shift_right(volt_in, Samples));
+	  counter <= counter + 1;
+	else
+	  full <= '1';
+	  
 	end if;
       end if;
-      counter <= counter + 1;
+      full_prev := full;
     end if;
   end process sum_proc;
 

@@ -10,7 +10,7 @@ xVal = np.linspace(-8, 8, num=2**14)
 def lutFunction(x):
     exp = np.exp(x)
     func = 1/(exp - 1)
-    if x > -1 and x < -1:
+    if x > -1 and x < 1:
         func = func*(2**2)
     else:
         func = func*(2**13)

@@ -1,92 +1,110 @@
 -------------------------------------------------------------------------------
--- Test bench for the SetVolts vhdl module
+-- Title      : Testbench for design "SetVolts"
+-- Project    : 
+-------------------------------------------------------------------------------
+-- File       : SetVolts_tb.vhd
+-- Author     : Vincent  <charlesv@cmodws123>
+-- Company    : 
+-- Created    : 2018-04-20
+-- Last update: 2018-04-20
+-- Platform   : 
+-- Standard   : VHDL'93/02
+-------------------------------------------------------------------------------
+-- Description: 
+-------------------------------------------------------------------------------
+-- Copyright (c) 2018 
+-------------------------------------------------------------------------------
+-- Revisions  :
+-- Date        Version  Author  Description
+-- 2018-04-20  1.0      charlesv	Created
 -------------------------------------------------------------------------------
 
-library IEEE;
-use IEEE.STD_LOGIC_1164.all;
-use IEEE.NUMERIC_STD.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-entity tb_SetVolts is
+-------------------------------------------------------------------------------
 
-end entity tb_SetVolts;
+entity SetVolts_tb is
 
-architecture behaviour of tb_SetVolts is
-  -- Instantiating the SetVolts module
-  component SetVolts is
-    generic (
-      period  : integer;
-      negBias : integer;
-      posBias : integer
-      );
-    port (
-      adc_clk : in std_logic;
-      period_in : in unsigned(31 downto 0);
-      Temp : in signed(13 downto 0);
-      Temp_valid : in std_logic;
+end entity SetVolts_tb;
 
-      volt_out : out signed(13 downto 0);
-      outStable : out std_logic
-      );
-  end component SetVolts;
+-------------------------------------------------------------------------------
 
-  -- parameters
-  constant period : integer := 10;
-  constant negBias : integer := -3;
-  constant posBias : integer := 1;
+architecture behaviour of SetVolts_tb is
 
-  -- input signals
-  signal adc_clk : std_logic           := '0';
-  signal period_in : unsigned(31 downto 0) := (others => '0');
-  signal Temp : signed(13 downto 0) := (others => '0');
+  -- component generics
+  constant period     : integer := 38;
+  constant Temp_guess : integer := 50;
+  constant negBias    : integer := -3;
+  constant posBias    : integer := 1;
+
+  -- component ports
+  signal adc_clk    : std_logic := '0';
+  signal period_in  : std_logic_vector(31 downto 0) := (others => '0');
+  signal Temp	    : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(100, 16));
   signal Temp_valid : std_logic := '0';
+  signal volt_out   : std_logic_vector(13 downto 0) := (others => '0');
+  signal iSat_en    : std_logic := '0';
+  signal vFloat_en  : std_logic := '0';
+  signal Temp_en    : std_logic := '0';
+  signal volt1	    : std_logic_vector(13 downto 0) := (others => '0');
+  signal volt2	    : std_logic_vector(13 downto 0) := (others => '0');
 
-  -- output signals
-  signal volt_out : signed(13 downto 0) := (others => '0');
-  signal outStable : std_logic;
-
-  -- Clock periods
-  constant adc_clk_period : time := 4 ns;
+  -- clock
+  signal Clk : std_logic := '1';
+  constant adc_clk_period : time := 8 ns;
 
 begin  -- architecture behaviour
-  -- Instantiating test unit
-  uut : SetVolts
+
+  -- component instantiation
+  DUT: entity work.SetVolts
     generic map (
-      period => period,
-      negBias => negBias,
-      posBias => posBias)
+      period	 => period,
+      Temp_guess => Temp_guess,
+      negBias	 => negBias,
+      posBias	 => posBias)
     port map (
-      -- Inputs
-      adc_clk => adc_clk,
-      period_in => period_in,
-      Temp => Temp,
+      adc_clk	 => adc_clk,
+      period_in	 => period_in,
+      Temp	 => Temp,
       Temp_valid => Temp_valid,
+      volt_out	 => volt_out,
+      iSat_en	 => iSat_en,
+      vFloat_en	 => vFloat_en,
+      Temp_en	 => Temp_en,
+      volt1	 => volt1,
+      volt2	 => volt2);
 
-      -- Outputs
-      volt_out => volt_out,
-      outStable => outStable
-      );
+  -- clock generation
+  adc_clk <= not adc_clk after adc_clk_period/2;
 
-  -- Clock process definitions
-  adc_clk_process : process
+  -- waveform generation
+  WaveGen_Proc: process
   begin
-    adc_clk <= '0';
-    wait for adc_clk_period/2;
-    adc_clk <= '1';
-    wait for adc_clk_period/2;
-  end process;
+    -- insert signal assignments here    
+    wait until Clk = '1';
+  end process WaveGen_Proc;
 
-  -- Stimulus process
-  temp_proc : process
-  begin
-    wait for adc_clk_period*30;
-    Temp <= Temp + 1;  
-  end process;
-  
-  temp_valid_proc : process
-  begin
-    wait for adc_clk_period * 39;
+  -- purpose: Process to set temp valid signal
+  -- type   : combinational
+  -- inputs : 
+  -- outputs: temp_valid
+  temp_valid_proc: process is
+  begin  -- process temp_valid_proc
+    wait for adc_clk_period*40;
     Temp_valid <= '1';
     wait for adc_clk_period;
     Temp_valid <= '0';
-  end process;
+  end process temp_valid_proc;
+
 end architecture behaviour;
+
+-------------------------------------------------------------------------------
+
+configuration SetVolts_tb_behaviour_cfg of SetVolts_tb is
+  for behaviour
+  end for;
+end SetVolts_tb_behaviour_cfg;
+
+-------------------------------------------------------------------------------

@@ -262,7 +262,7 @@ proc create_root_design { parentCell } {
   set blk_mem_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_0 ]
   set_property -dict [ list \
    CONFIG.Byte_Size {9} \
-   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/temp_calc_v1_0/oneLn_lut.coe} \
+   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/temp_calc_v1_0/Temp_lut.coe} \
    CONFIG.EN_SAFETY_CKT {false} \
    CONFIG.Enable_32bit_Address {false} \
    CONFIG.Enable_A {Always_Enabled} \
@@ -283,7 +283,7 @@ proc create_root_design { parentCell } {
   set blk_mem_gen_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_1 ]
   set_property -dict [ list \
    CONFIG.Byte_Size {9} \
-   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/oneexp_lut.coe} \
+   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/isat_calc_v1_0/iSat_lut.coe} \
    CONFIG.EN_SAFETY_CKT {false} \
    CONFIG.Enable_32bit_Address {false} \
    CONFIG.Enable_A {Always_Enabled} \
@@ -304,7 +304,7 @@ proc create_root_design { parentCell } {
   set blk_mem_gen_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_2 ]
   set_property -dict [ list \
    CONFIG.Byte_Size {9} \
-   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/vfloat_calc_v1_0/ln_lut.coe} \
+   CONFIG.Coe_File {../../../../../../../../../../../../../../../instruments/mirror-langmuir-probe/cores/vfloat_calc_v1_0/vFloat_lut.coe} \
    CONFIG.EN_SAFETY_CKT {false} \
    CONFIG.Enable_32bit_Address {false} \
    CONFIG.Enable_A {Always_Enabled} \
@@ -325,8 +325,8 @@ proc create_root_design { parentCell } {
   set div_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0 ]
   set_property -dict [ list \
    CONFIG.dividend_and_quotient_width {14} \
-   CONFIG.dividend_has_tuser {true} \
-   CONFIG.dividend_tuser_width {2} \
+   CONFIG.dividend_has_tuser {false} \
+   CONFIG.dividend_tuser_width {1} \
    CONFIG.divisor_has_tuser {false} \
    CONFIG.divisor_width {14} \
    CONFIG.fractional_width {12} \
@@ -339,12 +339,12 @@ proc create_root_design { parentCell } {
   set div_gen_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_1 ]
   set_property -dict [ list \
    CONFIG.dividend_and_quotient_width {14} \
-   CONFIG.dividend_has_tuser {true} \
-   CONFIG.dividend_tuser_width {2} \
+   CONFIG.dividend_has_tuser {false} \
+   CONFIG.dividend_tuser_width {1} \
    CONFIG.divisor_has_tuser {false} \
    CONFIG.divisor_width {14} \
-   CONFIG.fractional_width {12} \
-   CONFIG.latency {30} \
+   CONFIG.fractional_width {10} \
+   CONFIG.latency {28} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_1
 
@@ -352,12 +352,12 @@ proc create_root_design { parentCell } {
   set div_gen_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_2 ]
   set_property -dict [ list \
    CONFIG.dividend_and_quotient_width {14} \
-   CONFIG.dividend_has_tuser {true} \
-   CONFIG.dividend_tuser_width {2} \
+   CONFIG.dividend_has_tuser {false} \
+   CONFIG.dividend_tuser_width {1} \
    CONFIG.divisor_has_tuser {false} \
    CONFIG.divisor_width {14} \
-   CONFIG.fractional_width {12} \
-   CONFIG.latency {30} \
+   CONFIG.fractional_width {10} \
+   CONFIG.latency {28} \
    CONFIG.latency_configuration {Automatic} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_2
@@ -400,9 +400,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net SetVolts_0_Temp_en [get_bd_pins SetVolts_0/Temp_en] [get_bd_pins TempCalc_0/clk_en]
   connect_bd_net -net SetVolts_0_iSat_en [get_bd_pins SetVolts_0/iSat_en] [get_bd_pins iSatCalc_0/clk_en]
   connect_bd_net -net SetVolts_0_vFloat_en [get_bd_pins SetVolts_0/vFloat_en] [get_bd_pins vFloatCalc_0/clk_en]
-  connect_bd_net -net SetVolts_0_volt1 [get_bd_pins SetVolts_0/volt1] [get_bd_pins iSatCalc_0/volt1]
-  connect_bd_net -net SetVolts_0_volt2 [get_bd_pins SetVolts_0/volt2] [get_bd_pins TempCalc_0/volt2]
-  connect_bd_net -net SetVolts_0_volt_out [get_bd_ports output_voltage] [get_bd_pins SetVolts_0/volt_out]
+  connect_bd_net -net SetVolts_0_volt_out [get_bd_ports output_voltage] [get_bd_pins SetVolts_0/volt_out] [get_bd_pins TempCalc_0/volt2] [get_bd_pins iSatCalc_0/volt1] [get_bd_pins vFloatCalc_0/volt3]
   connect_bd_net -net TempCalc_0_BRAM_addr [get_bd_pins TempCalc_0/BRAM_addr] [get_bd_pins blk_mem_gen_0/addra]
   connect_bd_net -net TempCalc_0_Temp [get_bd_pins SetVolts_0/Temp] [get_bd_pins TempCalc_0/Temp] [get_bd_pins iSatCalc_0/Temp] [get_bd_pins vFloatCalc_0/Temp]
   connect_bd_net -net TempCalc_0_data_valid [get_bd_pins SetVolts_0/Temp_valid] [get_bd_pins TempCalc_0/data_valid]

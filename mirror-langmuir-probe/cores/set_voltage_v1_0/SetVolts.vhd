@@ -24,8 +24,6 @@ entity SetVolts is
     period_in  : in std_logic_vector(31 downto 0);
     Temp       : in std_logic_vector(15 downto 0);  -- Temperature sets the voltage bias
     Temp_valid : in std_logic;
-    --vFloat_valid : in std_logic;
-    --iSat_valid   : in std_logic;
 
     volt_out  : out std_logic_vector(13 downto 0);
     iSat_en   : out std_logic;
@@ -38,7 +36,7 @@ entity SetVolts is
 end entity SetVolts;
 
 architecture Behavioral of SetVolts is
-  signal output	     : signed(13 downto 0)	    := (others => '0');	 -- mask for the output voltage
+  signal output	     : signed(13 downto 0)	    := to_signed(Temp_guess*negBias, 14);	 -- mask for the output voltage
   signal counter     : integer			    := 0;  -- counter for setting the voltage levels
   signal level	     : integer range 0 to 2	    := 0;  -- counter for registering the voltage levels
   signal TempMask    : signed(15 downto 0)	    := to_signed(Temp_guess, 16);
@@ -169,7 +167,7 @@ begin  -- architecture Behavioral
 
   -- Setting the output to various voltage levels
   set_proc : process(adc_clk)
-    variable outMask	: signed(20 downto 0) := (others => '0');
+    variable outMask	: signed(20 downto 0) := to_signed(Temp_guess*negBias, 21);
     variable level_prev : integer	      := 0;
   begin
     if rising_edge(adc_clk) then

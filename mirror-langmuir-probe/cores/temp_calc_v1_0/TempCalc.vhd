@@ -71,9 +71,9 @@ begin  -- architecture Behavioral
         if calc_switch = "01" then
           Temp_mask <= shift_right((storeSig - storeSig2) * signed(BRAMret), 1);
         elsif calc_switch = "10" then
-	  Temp_mask <= shift_right((storeSig - storeSig2) * signed(BRAMret), 13);
-	elsif calc_switch = "00" then
-	  Temp_mask <= (storeSig - storeSig2) * signed(BRAMret);
+          Temp_mask <= shift_right((storeSig - storeSig2) * signed(BRAMret), 13);
+        elsif calc_switch = "00" then
+          Temp_mask <= (storeSig - storeSig2) * signed(BRAMret);
         end if;
         data_valid <= '1';
       else
@@ -121,58 +121,59 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: BRAM_addr, waitBRAM
   BRAM_proc : process (adc_clk) is
-    variable divider_int : signed(13 downto 0) := (others => '0');
-    variable divider_rem : signed(11 downto 0)  := (others => '0');
-    variable addr_mask   : integer             := 0;
+    variable divider_int : integer range -8191 to 8191 := 0;
+    variable divider_rem : integer range -2047 to 2047 := 0;
+    variable addr_mask   : integer range 0 to 16383    := 0;
   begin  -- process BRAM_proc
     if rising_edge(adc_clk) then
       if index = '1' then
         -- Extracting the integer part and the fractional part returned by the
         -- divider core to use in the bram address mapping
-        divider_rem := signed(divider_tdata(11 downto 0));
-        divider_int := signed(divider_tdata(25 downto 12));
-        int_store   <= to_integer(divider_int);
-        rem_store   <= to_integer(divider_rem);
-        if divider_int = to_signed(-1, 14) then
-          addr_mask   := 0;
-          calc_switch <= "01";
-        elsif divider_int = to_signed(0, 14) then
-          addr_mask   := 2048 + (to_integer(divider_rem));
-          if addr_mask < 2048 then
-            calc_switch <= "01";
-	  else
-	    calc_switch <= "00";
-	  end if;
-        elsif divider_int = to_signed(1, 14) then
-          addr_mask   := 4096 + (to_integer(divider_rem));
-          calc_switch <= "10";
-        elsif divider_int = to_signed(2, 14) then
-          addr_mask   := 6144 + (to_integer(divider_rem));
-          calc_switch <= "10";
-        elsif divider_int = to_signed(3, 14) then
-          addr_mask   := 8192 + (to_integer(divider_rem));
-          calc_switch <= "10";
-        elsif divider_int = to_signed(4, 14) then
-          addr_mask   := 10240 + (to_integer(divider_rem));
-          calc_switch <= "10";
-        elsif divider_int = to_signed(5, 14) then
-          addr_mask   := 12288 + (to_integer(divider_rem));
-          calc_switch <= "10";
-        elsif divider_int = to_signed(6, 14) then
-          addr_mask   := 14336 + (to_integer(divider_rem));
-          calc_switch <= "10";
-        elsif divider_int = to_signed(7, 14) then
-          addr_mask   := 8192 + (to_integer(divider_rem));
-          calc_switch <= "10";
-        else
-          if divider_int < to_signed(-8, 14) then
+        divider_rem := to_integer(signed(divider_tdata(11 downto 0)));
+        divider_int := to_integer(signed(divider_tdata(25 downto 12)));
+        int_store   <= divider_int;
+        rem_store   <= divider_rem;
+        case divider_int is
+          when -1 =>
             addr_mask   := 0;
             calc_switch <= "01";
-          elsif divider_int >= to_signed(8, 14) then
-            addr_mask   := 16383;
+          when 0 =>
+            addr_mask := 2048 + divider_rem;
+            if addr_mask < 2048 then
+              calc_switch <= "01";
+            else
+              calc_switch <= "00";
+            end if;
+          when 1 =>
+            addr_mask   := 4096 + divider_rem;
             calc_switch <= "10";
-          end if;
-        end if;
+          when 2 =>
+            addr_mask   := 6144 + divider_rem;
+            calc_switch <= "10";
+          when 3 =>
+            addr_mask   := 8192 + divider_rem;
+            calc_switch <= "10";
+          when 4 =>
+            addr_mask   := 10240 + divider_rem;
+            calc_switch <= "10";
+          when 5 =>
+            addr_mask   := 12288 + divider_rem;
+            calc_switch <= "10";
+          when 6 =>
+            addr_mask   := 14336 + divider_rem;
+            calc_switch <= "10";
+          when 7 =>
+            addr_mask   := 8192 + divider_rem;
+            calc_switch <= "10";
+          when others =>
+            if divider_int < to_signed(-8, 14) then
+              addr_mask   := 0;
+              calc_switch <= "01";
+            elsif divider_int >= to_signed(8, 14) then
+              addr_mask   := 16383;
+              calc_switch <= "10";
+            end if;
+        end case;
         addr_mask_store <= addr_mask;
         BRAM_addr       <= std_logic_vector(to_unsigned(addr_mask, 14));
         waitBRAM        <= '1';

@@ -118,75 +118,76 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: BRAM_addr, waitBRAM
   BRAM_proc : process (adc_clk) is
-    variable divider_int : signed(13 downto 0) := (others => '0');
-    variable divider_rem : signed(9 downto 0)  := (others => '0');
-    variable addr_mask   : integer             := 0;
+    variable divider_int : integer range -8191 to 8191 := 0;
+    variable divider_rem : integer range -1023 to 1023 := 0;
+    variable addr_mask   : integer range 0 to 16383    := 0;
   begin  -- process BRAM_proc
     if rising_edge(adc_clk) then
       if index = '1' then
         -- Extracting the integer part and the fractional part returned by the
         -- divider core to use in the bram address mapping
-        divider_rem := signed(divider_tdata(9 downto 0));
-        divider_int := signed(divider_tdata(23 downto 10));
-        int_store   <= to_integer(divider_int);
-        rem_store   <= to_integer(divider_rem);
-        if divider_int = to_signed(-8, 14) then
-          addr_mask   := 0;
-          calc_switch <= '1';
-        elsif divider_int = to_signed(-7, 14) then
-          addr_mask   := 1024 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(-6, 14) then
-          addr_mask   := 2048 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(-5, 14) then
-          addr_mask   := 3072 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(-4, 14) then
-          addr_mask   := 4096 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(-3, 14) then
-          addr_mask   := 5120 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(-2, 14) then
-          addr_mask   := 6144 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(-1, 14) then
-          addr_mask   := 7168 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(0, 14) then
-          addr_mask   := 8192 + (2*to_integer(divider_rem));
-          calc_switch <= '0';
-        elsif divider_int = to_signed(1, 14) then
-          addr_mask   := 9216 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(2, 14) then
-          addr_mask   := 10240 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(3, 14) then
-          addr_mask   := 11264 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(4, 14) then
-          addr_mask   := 12288 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(5, 14) then
-          addr_mask   := 13312 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(6, 14) then
-          addr_mask   := 14336 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        elsif divider_int = to_signed(7, 14) then
-          addr_mask   := 15360 + (2*to_integer(divider_rem));
-          calc_switch <= '1';
-        else
-          if divider_int < to_signed(-8, 14) then
+        divider_rem := to_integer(signed(divider_tdata(9 downto 0)));
+        divider_int := to_integer(signed(divider_tdata(23 downto 10)));
+        int_store   <= divider_int;
+        rem_store   <= divider_rem;
+        case divider_int is
+          when -8 =>
             addr_mask   := 0;
             calc_switch <= '1';
-          elsif divider_int >= to_signed(8, 14) then
-            addr_mask   := 16383;
+          when -7 =>
+            addr_mask   := 1024 + (2*divider_rem);
             calc_switch <= '1';
-          end if;
-        end if;
+          when -6 =>
+            addr_mask   := 2048 + (2*divider_rem);
+            calc_switch <= '1';
+          when -5 =>
+            addr_mask   := 3072 + (2*divider_rem);
+            calc_switch <= '1';
+          when -4 =>
+            addr_mask   := 4096 + (2*divider_rem);
+            calc_switch <= '1';
+          when -3 =>
+            addr_mask   := 5120 + (2*divider_rem);
+            calc_switch <= '1';
+          when -2 =>
+            addr_mask   := 6144 + (2*divider_rem);
+            calc_switch <= '1';
+          when -1 =>
+            addr_mask   := 7168 + (2*divider_rem);
+            calc_switch <= '1';
+          when 0 =>
+            addr_mask   := 8192 + (2*divider_rem);
+            calc_switch <= '0';
+          when 1 =>
+            addr_mask   := 9216 + (2*divider_rem);
+            calc_switch <= '1';
+          when 2 =>
+            addr_mask   := 10240 + (2*divider_rem);
+            calc_switch <= '1';
+          when 3 =>
+            addr_mask   := 11264 + (2*divider_rem);
+            calc_switch <= '1';
+          when 4 =>
+            addr_mask   := 12288 + (2*divider_rem);
+            calc_switch <= '1';
+          when 5 =>
+            addr_mask   := 13312 + (2*divider_rem);
+            calc_switch <= '1';
+          when 6 =>
+            addr_mask   := 14336 + (2*divider_rem);
+            calc_switch <= '1';
+          when 7 =>
+            addr_mask   := 15360 + (2*divider_rem);
+            calc_switch <= '1';
+          when others =>
+            if divider_int < -8 then
+              addr_mask   := 0;
+              calc_switch <= '1';
+            elsif divider_int >= 8 then
+              addr_mask   := 16383;
+              calc_switch <= '1';
+            end if;
+        end case;
         addr_mask_store <= addr_mask;
         BRAM_addr       <= std_logic_vector(to_unsigned(addr_mask, 14));
         waitBRAM        <= '1';
@@ -196,10 +197,10 @@ begin  -- architecture Behavioral
     end if;
   end process BRAM_proc;
 
-  -- purpose: process to collect bram data after address is set by division module
-  -- type   : combinational
-  -- inputs : adc_clk
-  -- outputs: exp_ret, exp_en
+-- purpose: process to collect bram data after address is set by division module
+-- type   : combinational
+-- inputs : adc_clk
+-- outputs: exp_ret, exp_en
   collect_proc : process (adc_clk) is
   begin  -- process collect_proc
     -- Setting a collection tick to get the right block ram memory back once

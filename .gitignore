@@ -6,13 +6,11 @@
 *.egg-info
 dist/
 build/
+*.npy
 
 # Folders
-tmp
-.Xil
-.vscode
-node_modules/
-instruments/Graham_neutron_pulse
+probe-response-current/
+three-volt-cycle/
 
 # Vivado
 *.jou

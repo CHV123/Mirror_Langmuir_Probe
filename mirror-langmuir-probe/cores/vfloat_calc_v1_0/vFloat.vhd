@@ -38,16 +38,17 @@ end entity vFloatCalc;
 
 architecture Behavioral of vFloatCalc is
 
-  signal exp_count   : integer range 0 to 31 := 0;
-  signal exp_en      : std_logic             := '0';
-  signal exp_ret     : signed(13 downto 0)   := (others => '0');
-  signal index       : std_logic             := '0';
-  signal diff_set    : std_logic             := '0';
-  signal waitBRAM    : std_logic             := '0';  -- Signal to indicate when
+  signal exp_count       : integer range 0 to 31 := 0;
+  signal exp_en          : std_logic             := '0';
+  signal exp_ret         : signed(13 downto 0)   := (others => '0');
+  signal index           : std_logic             := '0';
+  signal diff_set        : std_logic             := '0';
+  signal waitBRAM        : std_logic             := '0';  -- Signal to indicate when
                                         -- to wait for the bram return
-  signal storeSig    : signed(13 downto 0)   := (others => '0');
-  signal storeSig2   : signed(15 downto 0)   := (others => '0');
-  signal vFloat_mask : signed(31 downto 0)   := to_signed(vFloat_guess, 32);
+  signal storeSig        : signed(13 downto 0)   := (others => '0');
+  signal storeSig2       : signed(15 downto 0)   := (others => '0');
+  signal vFloat_mask     : signed(31 downto 0)   := to_signed(vFloat_guess, 32);
+  signal difference_hold : signed(15 downto 0)   := (others => '0');
 
   signal addr_mask_store : integer := 0;
   signal int_store       : integer := 0;
@@ -69,9 +70,9 @@ begin  -- architecture Behavioral
     if rising_edge(adc_clk) then
       if exp_en = '1' then
         if calc_switch = '1' then
-          vFloat_mask <= shift_right((storeSig - storeSig2) * signed(BRAMret), 12);
+          vFloat_mask <= shift_right(difference_hold * signed(BRAMret), 12);
         else
-          vFloat_mask <= shift_right((storeSig - storeSig2) * signed(BRAMret), 10);
+          vFloat_mask <= shift_right(difference_hold * signed(BRAMret), 10);
         end if;
         data_valid <= '1';
       else
@@ -79,6 +80,19 @@ begin  -- architecture Behavioral
       end if;
     end if;
   end process vFloat_proc;
+
+  -- purpose: Process to calcualte the difference between 0 bias and temperature
+  -- type   : sequential
+  -- inputs : adc_clk, waitBRAM, storeSig, storeSig2
+  -- outputs: difference_hold
+  difference_proc : process (adc_clk) is
+  begin  -- process difference_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if waitBRAM = '1' then            -- synchronous reset (active high)
+        difference_hold <= storeSig - storeSig2;
+      end if;
+    end if;
+  end process difference_proc;
 
   -- purpose: process to set the divisor and dividend for the divider
   -- type   : combinational

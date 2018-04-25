@@ -8,7 +8,7 @@ import time
 from MLP import MLP
 from koheron import connect
 
-host = os.getenv('HOST', '198.125.182.104')
+host = os.getenv('HOST', 'rp1')
 client = connect(host, name='mirror-langmuir-probe')
 driver = MLP(client)
 

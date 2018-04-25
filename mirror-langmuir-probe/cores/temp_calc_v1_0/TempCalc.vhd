@@ -48,6 +48,7 @@ architecture Behavioral of TempCalc is
   signal storeSig  : signed(13 downto 0)   := (others => '0');
   signal storeSig2 : signed(15 downto 0)   := (others => '0');
   signal Temp_mask : signed(31 downto 0)   := to_signed(Temp_guess, 32);
+  signal difference_hold : signed(15 downto 0)   := (others => '0');
 
   signal addr_mask_store : integer := 0;
   signal int_store       : integer := 0;
@@ -69,11 +70,11 @@ begin  -- architecture Behavioral
     if rising_edge(adc_clk) then
       if exp_en = '1' then
         if calc_switch = "01" then
-          Temp_mask <= shift_right((storeSig - storeSig2) * signed(BRAMret), 1);
+          Temp_mask <= shift_right(difference_hold * signed(BRAMret), 1);
         elsif calc_switch = "10" then
-          Temp_mask <= shift_right((storeSig - storeSig2) * signed(BRAMret), 13);
+          Temp_mask <= shift_right(difference_hold * signed(BRAMret), 13);
         elsif calc_switch = "00" then
-          Temp_mask <= (storeSig - storeSig2) * signed(BRAMret);
+          Temp_mask <= difference_hold * signed(BRAMret);
         end if;
         data_valid <= '1';
       else
@@ -81,6 +82,19 @@ begin  -- architecture Behavioral
       end if;
     end if;
   end process Temp_proc;
+
+  -- purpose: Process to calculate the difference between bias and floating voltage
+  -- type   : sequential
+  -- inputs : adc_clk, waitBRAM, storeSig, storeSig2
+  -- outputs: difference_hold
+  difference_proc: process (adc_clk) is
+  begin  -- process difference_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if waitBRAM = '1' then            -- synchronous reset (active high)
+        difference_hold <= storeSig - storeSig2;
+      end if;
+    end if;
+  end process difference_proc;
 
   -- purpose: process to set the divisor and dividend for the divider
   -- type   : combinational

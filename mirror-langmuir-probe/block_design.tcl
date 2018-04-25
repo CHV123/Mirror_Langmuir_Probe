@@ -212,9 +212,9 @@ connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins isat_calc/volt_in]
 connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins temp_calc/volt_in]
 connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins vfloat_calc/volt_in]
 
-connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins isat_calc/volt1]
-connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins temp_calc/volt2]
-connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins vfloat_calc/volt3]
+# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins isat_calc/volt1]
+# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins temp_calc/volt2]
+# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins vfloat_calc/volt3]
 ###############################################################################################################
 
 #############################################################################################################
@@ -236,6 +236,9 @@ connect_bd_net [get_bd_pins set_voltage/Temp_en] [get_bd_pins temp_calc/clk_en]
 connect_bd_net [get_bd_pins set_voltage/Isat_en] [get_bd_pins isat_calc/clk_en]
 connect_bd_net [get_bd_pins set_voltage/vFloat_en] [get_bd_pins vfloat_calc/clk_en]
 
+connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins isat_calc/volt1]
+connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins temp_calc/volt2]
+connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins vfloat_calc/volt3]
 ###########################################################################################################
 
 # Making sure clocks are synchronous

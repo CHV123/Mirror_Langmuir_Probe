@@ -72,7 +72,6 @@ set memory_segment  [get_bd_addr_segs /${::ps_name}/Data/SEG_adc_axis_fifo_Mem0]
 set_property offset [get_memory_offset adc_fifo] $memory_segment
 set_property range  [get_memory_range adc_fifo]  $memory_segment
 
-
 #############################################################################################################
 # Adding the "Calculate Isat" ip and making the appropriate connections
 create_bd_cell -type ip -vlnv PSFC:user:isat_calc:1.0 isat_calc
@@ -208,20 +207,32 @@ connect_bd_net [get_bd_pins isat_calc/iSat] [get_bd_pins vfloat_calc/iSat]
 connect_bd_net [get_bd_pins vfloat_calc/vFloat] [get_bd_pins temp_calc/vFloat]
 connect_bd_net [get_bd_pins vfloat_calc/Temp] [get_bd_pins temp_calc/Temp]
 
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins isat_calc/volt_in]
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins temp_calc/volt_in]
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins vfloat_calc/volt_in]
+###########################################################################################################
+# Adding the moving average for the inputs
+create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_0
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins moving_average_0/volt_in]
+connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins moving_average_0/adc_clk]
+connect_bd_net [get_bd_pins proc_sys_reset_adc_clk/peripheral_aresetn] [get_bd_pins moving_average_0/clk_rst]
 
-# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins isat_calc/volt1]
-# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins temp_calc/volt2]
-# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins vfloat_calc/volt3]
+connect_bd_net [get_bd_pins moving_average_0/volt_out] [get_bd_pins isat_calc/volt_in]
+connect_bd_net [get_bd_pins moving_average_0/volt_out] [get_bd_pins temp_calc/volt_in]
+connect_bd_net [get_bd_pins moving_average_0/volt_out] [get_bd_pins vfloat_calc/volt_in]
+
+create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_1
+connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins moving_average_1/volt_in]
+connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins moving_average_1/adc_clk]
+connect_bd_net [get_bd_pins proc_sys_reset_adc_clk/peripheral_aresetn] [get_bd_pins moving_average_1/clk_rst]
+
+connect_bd_net [get_bd_pins moving_average_1/volt_out] [get_bd_pins isat_calc/volt1]
+connect_bd_net [get_bd_pins moving_average_1/volt_out] [get_bd_pins temp_calc/volt2]
+connect_bd_net [get_bd_pins moving_average_1/volt_out] [get_bd_pins vfloat_calc/volt3]
 ###############################################################################################################
 
 #############################################################################################################
 # Adding the "Set Voltage" ip and making the appropriate connections
 create_bd_cell -type ip -vlnv PSFC:user:set_voltage:1.0 set_voltage
 
-set_property -dict [list CONFIG.period {40} CONFIG.Temp_guess {20} CONFIG.Negbias {-3} CONFIG.Posbias {1}] [get_bd_cells set_voltage]
+set_property -dict [list CONFIG.period {125} CONFIG.Temp_guess {1000} CONFIG.Negbias {-3} CONFIG.Posbias {1}] [get_bd_cells set_voltage]
 
 # Setting input connections
 connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins set_voltage/adc_clk]
@@ -236,9 +247,9 @@ connect_bd_net [get_bd_pins set_voltage/Temp_en] [get_bd_pins temp_calc/clk_en]
 connect_bd_net [get_bd_pins set_voltage/Isat_en] [get_bd_pins isat_calc/clk_en]
 connect_bd_net [get_bd_pins set_voltage/vFloat_en] [get_bd_pins vfloat_calc/clk_en]
 
-connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins isat_calc/volt1]
-connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins temp_calc/volt2]
-connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins vfloat_calc/volt3]
+# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins isat_calc/volt1]
+# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins temp_calc/volt2]
+# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins vfloat_calc/volt3]
 ###########################################################################################################
 
 # Making sure clocks are synchronous

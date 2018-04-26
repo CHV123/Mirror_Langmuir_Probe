@@ -26,8 +26,10 @@ def int2signed(convInt):
     return retBin
 ##########################################################
 
-driver.set_period(1250)
+driver.set_period(12500)
 driver.set_acquisition_length(int(250))
+
+print(bin(driver.get_temperature()))
 
 # driver.set_trigger(int(0b11111111111111111111111111111111))
 # driver.set_trigger(0)

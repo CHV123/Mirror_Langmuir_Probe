@@ -49,7 +49,7 @@ architecture Behavioral of SetVolts is
   constant latency : integer := 22;
 
 begin  -- architecture Behavioral
-
+  
   -- Process to define the level period
   period_proc : process(adc_clk)
   begin
@@ -71,7 +71,7 @@ begin  -- architecture Behavioral
   begin	 -- process temp_check_proc
     if rising_edge(adc_clk) then
       if Temp_valid = '1' then
-	if to_integer(signed(Temp)) > to_integer(to_signed(0, Temp'length)) then
+	if signed(Temp) > to_signed(0, Temp'length) then
 	  TempMask	 <= signed(Temp);
 	  TempMask_proxy := signed(Temp);
 	else

@@ -16,7 +16,8 @@ entity DivToAdrress is
     divider_tdata : in std_logic_vector(31 downto 0);
 
     BRAM_addr       : out std_logic_vector(13 downto 0);  -- BRAM address out
-    Address_gen_tvalid : out std_logic
+    Address_gen_tvalid : out std_logic;
+    divider_int_res : out std_logic_vector(13 downto 0)
     );
 
 end entity DivToAdrress;
@@ -40,6 +41,7 @@ BRAM_proc : process (adc_clk) is
   -- divider core to use in the bram address mapping
   divider_frac := signed(divider_tdata(11 downto 0));
   divider_int := signed(divider_tdata(25 downto 12));
+  divider_int_res <= divider_tdata(25 downto 12);
 --int_store   <= to_integer(divider_int);
 --rem_store   <= to_integer(divider_frac);
   if divider_int = to_signed(-4, 14) then

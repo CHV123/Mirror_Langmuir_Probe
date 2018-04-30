@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 dataArray = []
 
-xVal = np.linspace(-8, 8, num=2**14)
+xVal = np.linspace(-4, 4, num=2**14)
 
 def lutFunction(x):
     exp = np.exp(x)

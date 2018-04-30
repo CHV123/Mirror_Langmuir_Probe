@@ -87,6 +87,7 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_ISAT
 create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_Temp
 create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_Vfloating
 create_bd_cell -type ip -vlnv PSFC:user:input_control:1.0 input_control_0
+create_bd_cell -type ip -vlnv PSFC:user:Div_int_delay:1.0 Div_int_delay_0
 ################################### All Blocks Made #####################################################
 
 ################################### Connect All the Blocks ##############################################
@@ -96,7 +97,7 @@ connect_bd_net [get_bd_pins current_response_0/T_electron_out] [get_bd_pins div_
 connect_bd_net [get_bd_pins current_response_0/V_LP] [get_bd_pins div_gen_0/s_axis_dividend_tdata]
 connect_bd_net [get_bd_pins current_response_0/V_LP_tvalid] [get_bd_pins div_gen_0/s_axis_dividend_tvalid]
 connect_bd_net [get_bd_pins current_response_0/T_electron_out_tvalid] [get_bd_pins div_gen_0/s_axis_divisor_tvalid]
-connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac1]
+connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac2]
 connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins sts/Current]
 connect_bd_net [get_bd_pins current_response_0/Bias_voltage] [get_bd_pins adc_dac/adc1]
 connect_bd_net [get_bd_pins current_response_0/Resistence] [get_bd_pins ctl/Resistence]
@@ -107,13 +108,14 @@ connect_bd_net [get_bd_pins current_response_0/Resistence] [get_bd_pins ctl/Resi
 connect_bd_net [get_bd_pins Div_to_address_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
 connect_bd_net [get_bd_pins Div_to_address_0/BRAM_addr] [get_bd_pins blk_mem_gen_0/addra]
 connect_bd_net [get_bd_pins Div_to_address_0/Address_gen_tvalid] [get_bd_pins current_response_0/Expo_result_tvalid]
+connect_bd_net [get_bd_pins Div_to_address_0/divider_int_res] [get_bd_pins Div_int_delay_0/Int_in]
 ##################################### Div_to_address ################################################################
 
 
 ##################################### Divider Module ################################################################
 set_property -dict [list CONFIG.dividend_and_quotient_width.VALUE_SRC USER CONFIG.divisor_width.VALUE_SRC USER] [get_bd_cells div_gen_0]
 set_property -dict [list CONFIG.dividend_and_quotient_width {14} CONFIG.remainder_type {Fractional}]  [get_bd_cells div_gen_0]
-set_property -dict [list CONFIG.divisor_width {14} CONFIG.fractional_width {13} CONFIG.latency {31}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.divisor_width {14} CONFIG.fractional_width {12} CONFIG.latency {31}] [get_bd_cells div_gen_0]
 connect_bd_net [get_bd_pins div_gen_0/aclk] [get_bd_pins adc_dac/adc_clk]
 connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tdata] [get_bd_pins Div_to_address_0/divider_tdata]
 connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tvalid] [get_bd_pins Div_to_address_0/divider_tvalid]
@@ -165,10 +167,19 @@ connect_bd_net [get_bd_pins input_control_0/V_f] [get_bd_pins current_response_0
 connect_bd_net [get_bd_pins input_control_0/Isat] [get_bd_pins current_response_0/I_sat]
 ##################################### input control block #################################################################
 
+##################################### int delay block #####################################################################
+connect_bd_net [get_bd_pins Div_int_delay_0/Int_out] [get_bd_pins current_response_0/Expo_int_result]
+connect_bd_net [get_bd_pins Div_int_delay_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+##################################### int delay block #####################################################################
+
+
+
+
+
 ##################################### Connected all the Blocks ######################################################
 
 
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins adc_dac/dac2]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins adc_dac/dac1]
 
 
 

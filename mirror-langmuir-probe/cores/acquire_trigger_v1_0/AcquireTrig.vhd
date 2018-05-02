@@ -21,7 +21,8 @@ entity AcquireTrig is
     trigger : in std_logic;
 
     timestamp     : out std_logic_vector(24 downto 0);
-    acquire_valid : out std_logic
+    acquire_valid : out std_logic;
+    clear_pulse   : out std_logic
     );
 
 end entity AcquireTrig;
@@ -35,6 +36,17 @@ begin  -- architecture Behavioral
 
   acquire_valid <= acquire;
   timestamp     <= std_logic_vector(to_unsigned(acquire_time, timestamp'length));
+
+  -- purpose: Process to send the reset clk to the other modules
+  -- type   : sequential
+  -- inputs : adc_clk, acquire
+  -- outputs: clear_pulse
+  clear_proc: process (adc_clk) is
+  begin  -- process clear_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      clear_pulse <= trigger and (not trig_reset);
+    end if;
+  end process clear_proc;
 
   -- purpose: process to start acquisition and triggering
   -- type   : sequential

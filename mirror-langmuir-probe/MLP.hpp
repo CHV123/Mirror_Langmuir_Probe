@@ -52,7 +52,7 @@ public:
     ctl.write<reg::Acquisition_length>(acquisition_length);
   }
 
-  uint32_t get_temperature() {
+  uint32_t get_Temperature() {
     uint32_t temp_value = sts.read<reg::Temperature>();
     return temp_value;
   }
@@ -70,7 +70,12 @@ public:
   uint32_t get_Timestamp() {
     uint32_t timestamp_value = sts.read<reg::Timestamp>();
     return timestamp_value;
-  }  
+  }
+
+  uint32_t get_Coefficients() {
+    uint32_t coefficients_value = sts.read<reg::Coefficients>();
+    return coefficients_value;
+  }
   
   //Adc FIFO
   
@@ -160,11 +165,12 @@ inline void MLP::fifo_acquisition_thread() {
 	std::this_thread::sleep_for(fifo_sleep_for);
 	// Clearing vector back to zero
 	adc_data.resize(0);
+	ctx.log<INFO>("vector cleared, adc_data size: %d", adc_data.size());
       }
     }
     
     dropped = fill_buffer(dropped);
-    //std::this_thread::sleep_for(fifo_sleep_for);
+    // std::this_thread::sleep_for(fifo_sleep_for);
   }// While loop
 }
 
@@ -189,6 +195,7 @@ inline uint32_t MLP::fill_buffer(uint32_t dropped) {
     dataAvailable = true;
     collected = 0;
     dropped = 0;
+    //ctx.log<INFO>("collected cleared: %d", collected);
   }
   return dropped;
 }

@@ -12,11 +12,12 @@ use ieee.numeric_std.all;
 
 entity iSatCalc is
   generic (
-    Temp_guess   : integer := 20;
-    iSat_guess   : integer := -20;
+    Temp_guess   : integer := 100;
+    iSat_guess   : integer := -100;
     vFloat_guess : integer := 0);
   port (
     adc_clk        : in std_logic;      -- adc input clock
+    clk_rst        : in std_logic;      -- external reset
     vFloat         : in std_logic_vector(15 downto 0);  -- Floating Voltage input
     Temp           : in std_logic_vector(15 downto 0);  -- Temperature input
     BRAMret        : in std_logic_vector(15 downto 0);  -- data returned by BRAM
@@ -42,7 +43,6 @@ architecture Behavioral of iSatCalc is
   signal exp_en    : std_logic             := '0';
   signal exp_ret   : signed(13 downto 0)   := (others => '0');
   signal index     : std_logic             := '0';
-  signal diff_set  : std_logic             := '0';
   signal waitBRAM  : std_logic             := '0';  -- Signal to indicate when
                                                     -- to wait for the bram return
   signal storeSig  : signed(13 downto 0)   := (others => '0');
@@ -55,10 +55,28 @@ architecture Behavioral of iSatCalc is
 
   signal calc_switch : std_logic := '0';
 
+  signal output_trigger : std_logic := '0';
+
 begin  -- architecture Behavioral
 
   index <= divider_tvalid;
-  iSat  <= std_logic_vector(iSat_mask(15 downto 0));
+
+  -- purpose: Process to do core reset
+  -- type   : sequential
+  -- inputs : adc_clk, clk_rst, iSat_guess
+  -- outputs: iSat
+  reset_proc : process (adc_clk) is
+  begin  -- process reset_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if clk_rst = '1' then             -- synchronous reset (active high)
+        iSat <= std_logic_vector(to_signed(iSat_guess, 16));
+      else
+        if output_trigger = '1' then
+          iSat <= std_logic_vector(iSat_mask(15 downto 0));
+        end if;
+      end if;
+    end if;
+  end process reset_proc;
 
   -- purpose: Process to calculate Saturation current
   -- type   : combinational
@@ -73,9 +91,11 @@ begin  -- architecture Behavioral
         else
           iSat_mask <= shift_right(storeSig * signed(BRAMret), 2);
         end if;
-        data_valid <= '1';
+        data_valid     <= '1';
+        output_trigger <= '1';
       else
-        data_valid <= '0';
+        output_trigger <= '0';
+        data_valid     <= '0';
       end if;
     end if;
   end process iSat_proc;
@@ -91,24 +111,20 @@ begin  -- architecture Behavioral
       if clk_en = '1' then
         -- Setting the variables to go into the division
         divisor_mask := to_signed(to_integer(signed(Temp)), 14);
-        if abs(divisor_mask) > 0 then
-          divisor_tdata <= "00" & std_logic_vector(divisor_mask);
-        else
+        if divisor_mask = to_signed(0, 14) then
           divisor_tdata <= "00" & std_logic_vector(to_signed(Temp_guess, 14));
+        else
+          divisor_tdata <= "00" & std_logic_vector(divisor_mask);          
         end if;
-        dividend_tdata  <= "00" &std_logic_vector(to_signed(to_integer(signed(volt1))-to_integer(signed(vFloat)), 14));
+        dividend_tdata  <= "00" & std_logic_vector(to_signed(to_integer(signed(volt1))-to_integer(signed(vFloat)), 14));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
-        diff_set        <= '1';
         storeSig        <= signed(volt_in);
       else
         -- making them zero otherwise, though strictly this should not be
         -- necessary as we're sending a tvalid signal
-        divisor_tdata   <= (others => '0');
-        dividend_tdata  <= (others => '0');
         dividend_tvalid <= '0';
         divisor_tvalid  <= '0';
-        diff_set        <= '0';
       end if;
     end if;
   end process div_proc;

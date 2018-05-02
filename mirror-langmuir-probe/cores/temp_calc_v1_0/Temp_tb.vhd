@@ -70,10 +70,10 @@ architecture test_bench of tb_Temp is
   -- input signals
   signal adc_clk       : std_logic                     := '0';
   signal vFloat        : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(0, 16));  -- Floating Voltage input
-  signal iSat          : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(200, 16));  -- Temperature input
+  signal iSat          : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(2, 16));  -- Temperature input
   signal BRAMret       : std_logic_vector(15 downto 0)           := std_logic_vector(to_signed(0, 16));  -- data returned by BRAM
-  signal volt_in       : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(50, 14));  -- Voltage input
-  signal volt2         : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(200, 14));  -- Second bias voltage in cycle
+  signal volt_in       : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(-1, 14));  -- Voltage input
+  signal volt2         : std_logic_vector(13 downto 0)           := std_logic_vector(to_signed(1000, 14));  -- Second bias voltage in cycle
   signal clk_en        : std_logic                     := '0';  -- Clock Enable to set period start
   signal divider_tdata : std_logic_vector(31 downto 0) := (others => '0');
   signal divider_tvalid : std_logic := '0';

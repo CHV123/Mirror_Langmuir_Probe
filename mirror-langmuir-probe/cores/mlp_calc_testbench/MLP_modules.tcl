@@ -229,6 +229,7 @@ proc create_hier_cell_vFloat_hier { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I -from 13 -to 0 LP_voltage
+  create_bd_pin -dir I -type rst Reset_In
   create_bd_pin -dir I -from 15 -to 0 Temp
   create_bd_pin -dir I -type clk clk_100MHz
   create_bd_pin -dir I clk_en
@@ -288,6 +289,7 @@ proc create_hier_cell_vFloat_hier { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net Net [get_bd_pins clk_100MHz] [get_bd_pins blk_mem_gen_2/clka] [get_bd_pins div_gen_1/aclk] [get_bd_pins vFloatCalc_0/adc_clk]
+  connect_bd_net -net Reset_In_1 [get_bd_pins Reset_In] [get_bd_pins vFloatCalc_0/clk_rst]
   connect_bd_net -net SetVolts_0_vFloat_en [get_bd_pins clk_en] [get_bd_pins vFloatCalc_0/clk_en]
   connect_bd_net -net SetVolts_0_volt_out [get_bd_pins output_voltage] [get_bd_pins vFloatCalc_0/volt3]
   connect_bd_net -net TempCalc_0_Temp [get_bd_pins Temp] [get_bd_pins vFloatCalc_0/Temp]
@@ -339,6 +341,7 @@ proc create_hier_cell_iSat_hier { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I -from 13 -to 0 LP_voltage
+  create_bd_pin -dir I -type rst Reset_In
   create_bd_pin -dir I -from 15 -to 0 Temp
   create_bd_pin -dir I -type clk clk_100MHz
   create_bd_pin -dir I clk_en
@@ -392,6 +395,18 @@ proc create_hier_cell_iSat_hier { parentCell nameHier } {
      return 1
    }
   
+  set_property -dict [ list \
+   CONFIG.CLK_DOMAIN {MLP_modules_clk_100MHz} \
+ ] [get_bd_intf_pins /iSat_hier/iSatCalc_0/dividend]
+
+  set_property -dict [ list \
+   CONFIG.CLK_DOMAIN {MLP_modules_clk_100MHz} \
+ ] [get_bd_intf_pins /iSat_hier/iSatCalc_0/divider]
+
+  set_property -dict [ list \
+   CONFIG.CLK_DOMAIN {MLP_modules_clk_100MHz} \
+ ] [get_bd_intf_pins /iSat_hier/iSatCalc_0/divisor]
+
   # Create interface connections
   connect_bd_intf_net -intf_net div_gen_2_M_AXIS_DOUT [get_bd_intf_pins div_gen_2/M_AXIS_DOUT] [get_bd_intf_pins iSatCalc_0/divider]
   connect_bd_intf_net -intf_net iSatCalc_0_dividend [get_bd_intf_pins div_gen_2/S_AXIS_DIVIDEND] [get_bd_intf_pins iSatCalc_0/dividend]
@@ -399,6 +414,7 @@ proc create_hier_cell_iSat_hier { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net Net [get_bd_pins clk_100MHz] [get_bd_pins blk_mem_gen_1/clka] [get_bd_pins div_gen_2/aclk] [get_bd_pins iSatCalc_0/adc_clk]
+  connect_bd_net -net Reset_In_1 [get_bd_pins Reset_In] [get_bd_pins iSatCalc_0/clk_rst]
   connect_bd_net -net SetVolts_0_iSat_en [get_bd_pins clk_en] [get_bd_pins iSatCalc_0/clk_en]
   connect_bd_net -net SetVolts_0_volt_out [get_bd_pins output_voltage] [get_bd_pins iSatCalc_0/volt1]
   connect_bd_net -net TempCalc_0_Temp [get_bd_pins Temp] [get_bd_pins iSatCalc_0/Temp]
@@ -450,6 +466,7 @@ proc create_hier_cell_Temp_hier { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I -from 13 -to 0 LP_voltage
+  create_bd_pin -dir I -type rst Reset_In
   create_bd_pin -dir O -from 15 -to 0 Temp
   create_bd_pin -dir I -type clk clk_100MHz
   create_bd_pin -dir I clk_en
@@ -511,6 +528,7 @@ proc create_hier_cell_Temp_hier { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net Net [get_bd_pins clk_100MHz] [get_bd_pins TempCalc_0/adc_clk] [get_bd_pins blk_mem_gen_0/clka] [get_bd_pins div_gen_0/aclk]
+  connect_bd_net -net Reset_In_1 [get_bd_pins Reset_In] [get_bd_pins TempCalc_0/clk_rst]
   connect_bd_net -net SetVolts_0_Temp_en [get_bd_pins clk_en] [get_bd_pins TempCalc_0/clk_en]
   connect_bd_net -net SetVolts_0_volt_out [get_bd_pins output_voltage] [get_bd_pins TempCalc_0/volt2]
   connect_bd_net -net TempCalc_0_BRAM_addr [get_bd_pins TempCalc_0/BRAM_addr] [get_bd_pins blk_mem_gen_0/addra]
@@ -580,6 +598,18 @@ proc create_hier_cell_Current_hier { parentCell nameHier } {
      return 1
    }
   
+  set_property -dict [ list \
+   CONFIG.CLK_DOMAIN {MLP_modules_clk_100MHz} \
+ ] [get_bd_intf_pins /Current_hier/CurRes_0/dividend]
+
+  set_property -dict [ list \
+   CONFIG.CLK_DOMAIN {MLP_modules_clk_100MHz} \
+ ] [get_bd_intf_pins /Current_hier/CurRes_0/divider]
+
+  set_property -dict [ list \
+   CONFIG.CLK_DOMAIN {MLP_modules_clk_100MHz} \
+ ] [get_bd_intf_pins /Current_hier/CurRes_0/divisor]
+
   # Create instance: blk_mem_gen_3, and set properties
   set blk_mem_gen_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_3 ]
   set_property -dict [ list \
@@ -671,6 +701,10 @@ proc create_root_design { parentCell } {
 
   # Create ports
   set LP_voltage [ create_bd_port -dir O -from 13 -to 0 LP_voltage ]
+  set Reset_In [ create_bd_port -dir I -type rst Reset_In ]
+  set_property -dict [ list \
+   CONFIG.POLARITY {ACTIVE_HIGH} \
+ ] $Reset_In
   set Temp_In [ create_bd_port -dir I -from 15 -to 0 -type data Temp_In ]
   set clk_100MHz [ create_bd_port -dir I -type clk clk_100MHz ]
   set_property -dict [ list \
@@ -710,6 +744,7 @@ proc create_root_design { parentCell } {
 
   # Create port connections
   connect_bd_net -net Net [get_bd_ports clk_100MHz] [get_bd_pins Current_hier/clk_100MHz] [get_bd_pins SetVolts_0/adc_clk] [get_bd_pins Temp_hier/clk_100MHz] [get_bd_pins iSat_hier/clk_100MHz] [get_bd_pins vFloat_hier/clk_100MHz]
+  connect_bd_net -net Reset_In_1 [get_bd_ports Reset_In] [get_bd_pins SetVolts_0/clk_rst] [get_bd_pins Temp_hier/Reset_In] [get_bd_pins iSat_hier/Reset_In] [get_bd_pins vFloat_hier/Reset_In]
   connect_bd_net -net SetVolts_0_Temp_en [get_bd_pins SetVolts_0/Temp_en] [get_bd_pins Temp_hier/clk_en]
   connect_bd_net -net SetVolts_0_iSat_en [get_bd_pins SetVolts_0/iSat_en] [get_bd_pins iSat_hier/clk_en]
   connect_bd_net -net SetVolts_0_vFloat_en [get_bd_pins SetVolts_0/vFloat_en] [get_bd_pins vFloat_hier/clk_en]

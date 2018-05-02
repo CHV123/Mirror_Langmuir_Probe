@@ -35,7 +35,7 @@ class MLP(object):
         pass
     
     @command()
-    def get_temperature(self):
+    def get_Temperature(self):
         return self.client.recv_uint32()
 
     @command()
@@ -45,6 +45,11 @@ class MLP(object):
     @command()
     def get_vFloat(self):
         return self.client.recv_uint32()
+
+    @command()
+    def get_Coefficients(self):
+        return self.client.recv_uint32()    
+    
 
     # def set_dac(self):
     #     @command()

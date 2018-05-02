@@ -1,8 +1,7 @@
 -------------------------------------------------------------------------------
--- Module to calculate the ISat constant for MLP bias setting
+-- Module to calculate the vFloat for MLP bias setting
 -- This module must be used in conjuction with a divider core and a bram
--- generator core. The latency from clock_enable to data valid is currently 36
--- clock cycles
+-- generator core.
 -- Started on March 2nd by Charlie Vincent
 -------------------------------------------------------------------------------
 
@@ -12,11 +11,12 @@ use ieee.numeric_std.all;
 
 entity vFloatCalc is
   generic (
-    Temp_guess   : integer := 20;
-    iSat_guess   : integer := -20;
+    Temp_guess   : integer := 100;
+    iSat_guess   : integer := -100;
     vFloat_guess : integer := 0);
   port (
     adc_clk        : in std_logic;      -- adc input clock
+    clk_rst        : in std_logic;      -- reset input
     iSat           : in std_logic_vector(15 downto 0);  -- Floating Voltage input
     Temp           : in std_logic_vector(15 downto 0);  -- Temperature input
     BRAMret        : in std_logic_vector(15 downto 0);  -- data returned by BRAM
@@ -42,7 +42,6 @@ architecture Behavioral of vFloatCalc is
   signal exp_en          : std_logic             := '0';
   signal exp_ret         : signed(13 downto 0)   := (others => '0');
   signal index           : std_logic             := '0';
-  signal diff_set        : std_logic             := '0';
   signal waitBRAM        : std_logic             := '0';  -- Signal to indicate when
                                         -- to wait for the bram return
   signal storeSig        : signed(13 downto 0)   := (others => '0');
@@ -56,10 +55,28 @@ architecture Behavioral of vFloatCalc is
 
   signal calc_switch : std_logic := '0';
 
+  signal output_trigger : std_logic := '0';
+
 begin  -- architecture Behavioral
 
-  index  <= divider_tvalid;
-  vFloat <= std_logic_vector(vFloat_mask(15 downto 0));
+  index <= divider_tvalid;
+
+  -- purpose: Process to do core reset
+  -- type   : sequential
+  -- inputs : adc_clk, clk_rst, iSat_guess
+  -- outputs: iSat
+  reset_proc : process (adc_clk) is
+  begin  -- process reset_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if clk_rst = '1' then             -- synchronous reset (active high)
+        vFloat <= std_logic_vector(to_signed(vFloat_guess, 16));
+      else
+        if output_trigger = '1' then
+          vFloat <= std_logic_vector(vFloat_mask(15 downto 0));
+        end if;
+      end if;
+    end if;
+  end process reset_proc;
 
   -- purpose: Process to calculate Saturation current
   -- type   : combinational
@@ -74,9 +91,11 @@ begin  -- architecture Behavioral
         else
           vFloat_mask <= shift_right(difference_hold * signed(BRAMret), 10);
         end if;
-        data_valid <= '1';
+        data_valid     <= '1';
+        output_trigger <= '1';
       else
-        data_valid <= '0';
+        data_valid     <= '0';
+        output_trigger <= '0';
       end if;
     end if;
   end process vFloat_proc;
@@ -105,7 +124,7 @@ begin  -- architecture Behavioral
       if clk_en = '1' then
         -- Setting the variables to go into the division
         divisor_mask := to_signed(to_integer(signed(iSat)), 14);
-        if abs(divisor_mask) > 0 then
+        if divisor_mask /= to_signed(0, 14) then
           divisor_tdata <= "00" & std_logic_vector(divisor_mask);
         else
           divisor_tdata <= "00" & std_logic_vector(to_signed(iSat_guess, 14));
@@ -113,17 +132,13 @@ begin  -- architecture Behavioral
         dividend_tdata  <= "00" & volt_in;
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
-        diff_set        <= '1';
         storeSig        <= signed(volt3);
         storeSig2       <= signed(Temp);
       else
         -- making them zero otherwise, though strictly this should not be
         -- necessary as we're sending a tvalid signal
-        -- divisor_tdata   <= (others => '0');
-        -- dividend_tdata  <= (others => '0');
         dividend_tvalid <= '0';
         divisor_tvalid  <= '0';
-        diff_set        <= '0';
       end if;
     end if;
   end process div_proc;

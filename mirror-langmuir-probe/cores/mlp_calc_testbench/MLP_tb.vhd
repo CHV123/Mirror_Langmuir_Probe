@@ -22,6 +22,7 @@ architecture test_bench of tb_MLP is
       vFloat_in     : in std_logic_vector(15 downto 0);
       input_voltage : in std_logic_vector(13 downto 0);
       period        : in std_logic_vector(31 downto 0);
+      Reset_In      : in std_logic;
 
       LP_voltage     : out std_logic_vector(13 downto 0);
       output_voltage : out std_logic_vector(13 downto 0));
@@ -34,6 +35,7 @@ architecture test_bench of tb_MLP is
   signal Temp_In   : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(100, 16));
   signal iSat_In   : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(-100, 16));
   signal vFloat_In : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(-10, 16));
+  signal Reset_in  : std_logic := '0';
 
   signal LP_voltage : std_logic_vector(13 downto 0) := (others => '0');
   signal volt_out   : std_logic_vector(13 downto 0) := (others => '0');
@@ -54,6 +56,7 @@ begin  -- architecture behaviour
       clk_100MHz    => adc_clk,
       input_voltage => volt_in,
       period        => period,
+      Reset_In      => Reset_In,
 
       LP_voltage     => LP_voltage,
       output_voltage => volt_out
@@ -116,5 +119,19 @@ begin  -- architecture behaviour
     wait for adc_clk_period*10000;
     vFloat_In <= std_logic_vector(to_signed(-60, 16));
   end process float_proc;
+  
+  isat_proc: process is
+    begin  -- process temp_proc
+      wait for adc_clk_period*6000;
+      iSat_In <= std_logic_vector(to_signed(-100, 16));
+      wait for adc_clk_period*10000;
+      iSat_In <= std_logic_vector(to_signed(-66, 16));
+      wait for adc_clk_period*10000;
+      iSat_In <= std_logic_vector(to_signed(-150, 16));
+      wait for adc_clk_period*10000;
+      iSat_In <= std_logic_vector(to_signed(-20, 16));
+      wait for adc_clk_period*10000;
+      iSat_In <= std_logic_vector(to_signed(100, 16));
+    end process isat_proc;
 
 end architecture test_bench;

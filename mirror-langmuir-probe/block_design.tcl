@@ -35,7 +35,7 @@ for {set i 0} {$i < [get_parameter n_adc]} {incr i} {
 set intercon_idx 0
 set idx [add_master_interface $intercon_idx]
 cell xilinx.com:ip:axis_clock_converter:1.1 adc_clock_converter {
-  TDATA_NUM_BYTES 8
+  TDATA_NUM_BYTES 4
 } {
   s_axis_aresetn $rst_adc_clk_name/peripheral_aresetn
   m_axis_aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
@@ -43,15 +43,16 @@ cell xilinx.com:ip:axis_clock_converter:1.1 adc_clock_converter {
   m_axis_aclk [set ps_clk$intercon_idx]
 }
 
-# Add AXI stream width converter to write data to AXI LITE FIFO
-cell xilinx.com:ip:axis_dwidth_converter:1.1 adc_dwidth_converter {
-    S_TDATA_NUM_BYTES 8
-    M_TDATA_NUM_BYTES 4
-} {
-  aclk [set ps_clk$intercon_idx]
-  aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
-  S_AXIS adc_clock_converter/M_AXIS
-}    
+# # Add AXI stream width converter to write data to AXI LITE FIFO
+# cell xilinx.com:ip:axis_dwidth_converter:1.1 adc_dwidth_converter {
+#     S_TDATA_NUM_BYTES 8
+#     M_TDATA_NUM_BYTES 4
+# } {
+#   aclk [set ps_clk$intercon_idx]
+#   aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
+#   S_AXIS adc_clock_converter/M_AXIS
+# }
+
 
 # Add AXI stream FIFO to read pulse data from the PS
 cell xilinx.com:ip:axi_fifo_mm_s:4.1 adc_axis_fifo {
@@ -64,7 +65,7 @@ cell xilinx.com:ip:axi_fifo_mm_s:4.1 adc_axis_fifo {
   s_axi_aclk [set ps_clk$intercon_idx]
   s_axi_aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
   S_AXI [set interconnect_${intercon_idx}_name]/M${idx}_AXI
-  AXI_STR_RXD adc_dwidth_converter/M_AXIS
+  AXI_STR_RXD adc_clock_converter/M_AXIS
 }
 
 assign_bd_address [get_bd_addr_segs adc_axis_fifo/S_AXI/Mem0]
@@ -207,32 +208,40 @@ connect_bd_net [get_bd_pins isat_calc/iSat] [get_bd_pins vfloat_calc/iSat]
 connect_bd_net [get_bd_pins vfloat_calc/vFloat] [get_bd_pins temp_calc/vFloat]
 connect_bd_net [get_bd_pins vfloat_calc/Temp] [get_bd_pins temp_calc/Temp]
 
-###########################################################################################################
-# Adding the moving average for the inputs
-create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_0
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins moving_average_0/volt_in]
-connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins moving_average_0/adc_clk]
-connect_bd_net [get_bd_pins proc_sys_reset_adc_clk/peripheral_aresetn] [get_bd_pins moving_average_0/clk_rst]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins isat_calc/volt_in]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins temp_calc/volt_in]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins vfloat_calc/volt_in]
 
-connect_bd_net [get_bd_pins moving_average_0/volt_out] [get_bd_pins isat_calc/volt_in]
-connect_bd_net [get_bd_pins moving_average_0/volt_out] [get_bd_pins temp_calc/volt_in]
-connect_bd_net [get_bd_pins moving_average_0/volt_out] [get_bd_pins vfloat_calc/volt_in]
+# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins isat_calc/volt1]
+# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins temp_calc/volt2]
+# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins vfloat_calc/volt3]
 
-create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_1
-connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins moving_average_1/volt_in]
-connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins moving_average_1/adc_clk]
-connect_bd_net [get_bd_pins proc_sys_reset_adc_clk/peripheral_aresetn] [get_bd_pins moving_average_1/clk_rst]
+# ###########################################################################################################
+# # Adding the moving average for the inputs
+# create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_in
+# connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins moving_average_in/volt_in]
+# connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins moving_average_in/adc_clk]
+# connect_bd_net [get_bd_pins proc_sys_reset_adc_clk/peripheral_aresetn] [get_bd_pins moving_average_in/clk_rst]
 
-connect_bd_net [get_bd_pins moving_average_1/volt_out] [get_bd_pins isat_calc/volt1]
-connect_bd_net [get_bd_pins moving_average_1/volt_out] [get_bd_pins temp_calc/volt2]
-connect_bd_net [get_bd_pins moving_average_1/volt_out] [get_bd_pins vfloat_calc/volt3]
-###############################################################################################################
+# connect_bd_net [get_bd_pins moving_average_in/volt_out] [get_bd_pins isat_calc/volt_in]
+# connect_bd_net [get_bd_pins moving_average_in/volt_out] [get_bd_pins temp_calc/volt_in]
+# connect_bd_net [get_bd_pins moving_average_in/volt_out] [get_bd_pins vfloat_calc/volt_in]
+
+# create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_out
+# connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins moving_average_out/volt_in]
+# connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins moving_average_out/adc_clk]
+# connect_bd_net [get_bd_pins proc_sys_reset_adc_clk/peripheral_aresetn] [get_bd_pins moving_average_out/clk_rst]
+
+# connect_bd_net [get_bd_pins moving_average_out/volt_out] [get_bd_pins isat_calc/volt1]
+# connect_bd_net [get_bd_pins moving_average_out/volt_out] [get_bd_pins temp_calc/volt2]
+# connect_bd_net [get_bd_pins moving_average_out/volt_out] [get_bd_pins vfloat_calc/volt3]
+# ###############################################################################################################
 
 #############################################################################################################
 # Adding the "Set Voltage" ip and making the appropriate connections
 create_bd_cell -type ip -vlnv PSFC:user:set_voltage:1.0 set_voltage
 
-set_property -dict [list CONFIG.period {125} CONFIG.Temp_guess {1000} CONFIG.Negbias {-3} CONFIG.Posbias {1}] [get_bd_cells set_voltage]
+set_property -dict [list CONFIG.period {125} CONFIG.Temp_guess {100} CONFIG.Negbias {-3} CONFIG.Posbias {1}] [get_bd_cells set_voltage]
 
 # Setting input connections
 connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins set_voltage/adc_clk]
@@ -274,8 +283,6 @@ set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins temp_calc
 set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins vfloat_calc/divisor]
 set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins vfloat_calc/divisor]
 
-# Grouping into a Hierarchy
-group_bd_cells MLP_calc [get_bd_cells temp_SPR] [get_bd_cells vFloat_div] [get_bd_cells set_voltage] [get_bd_cells temp_calc] [get_bd_cells vfloat_calc] [get_bd_cells isat_calc] [get_bd_cells Temp_div] [get_bd_cells iSat_SPR] [get_bd_cells iSat_div] [get_bd_cells vfloat_SPR]
 
 ##########################################################################################################
 # Constant block to fill out module return values
@@ -293,10 +300,10 @@ create_bd_cell -type ip -vlnv PSFC:user:data_collector:1.0 data_collector
 
 connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins data_collector/adc_clk]
 
-connect_bd_net [get_bd_pins MLP_calc/Temp] [get_bd_pins data_collector/Temp]
-connect_bd_net [get_bd_pins MLP_calc/vFloat] [get_bd_pins data_collector/vFloat]
-connect_bd_net [get_bd_pins MLP_calc/iSat] [get_bd_pins data_collector/iSat]
-connect_bd_net [get_bd_pins MLP_calc/temp_calc/data_valid] [get_bd_pins data_collector/Temp_valid]
+connect_bd_net [get_bd_pins temp_calc/Temp] [get_bd_pins data_collector/Temp]
+connect_bd_net [get_bd_pins vfloat_calc/vFloat] [get_bd_pins data_collector/vFloat]
+connect_bd_net [get_bd_pins isat_calc/iSat] [get_bd_pins data_collector/iSat]
+connect_bd_net [get_bd_pins temp_calc/data_valid] [get_bd_pins data_collector/Temp_valid]
 connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins data_collector/v_in]
 connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins data_collector/v_out]
 
@@ -317,11 +324,41 @@ connect_bd_net [get_bd_pins ctl/Acquisition_length] [get_bd_pins acquire_trigger
 connect_bd_net [get_bd_pins acquire_trigger/acquire_valid] [get_bd_pins data_collector/clk_en]
 connect_bd_net [get_bd_pins acquire_trigger/timestamp] [get_bd_pins sts/Timestamp]
 
+connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins temp_calc/clk_rst]
+connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins isat_calc/clk_rst]
+connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins vfloat_calc/clk_rst]
+connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins set_voltage/clk_rst]
+
 # Taking a bit from the trigger to implement the acquisition trigger
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_trigger
 connect_bd_net [get_bd_pins ctl/Trigger] [get_bd_pins trigger_to_trigger/Din]
 connect_bd_net [get_bd_pins trigger_to_trigger/Dout] [get_bd_pins acquire_trigger/trigger]
 set_property -dict [list CONFIG.DIN_TO {0} CONFIG.DIN_FROM {0} CONFIG.DOUT_WIDTH {1} CONFIG.DIN_WIDTH {32}] [get_bd_cells trigger_to_trigger]
+
+################################################################################################################
+
+################################################################################################################
+# Adding the calibration block
+create_bd_cell -type ip -vlnv PSFC:user:auto_calibrate:1.0 auto_calibrate
+
+connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins auto_calibrate/volt_in]
+connect_bd_net [get_bd_pins auto_calibrate/volt_out] [get_bd_pins isat_calc/volt1]
+connect_bd_net [get_bd_pins auto_calibrate/volt_out] [get_bd_pins temp_calc/volt2]
+connect_bd_net [get_bd_pins auto_calibrate/volt_out] [get_bd_pins vfloat_calc/volt3]
+connect_bd_net [get_bd_pins auto_calibrate/adc_clk] [get_bd_pins adc_dac/adc_clk]
+
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_calibrate
+connect_bd_net [get_bd_pins trigger_to_calibrate/Dout] [get_bd_pins auto_calibrate/clk_rst]
+connect_bd_net [get_bd_pins trigger_to_calibrate/Din] [get_bd_pins ctl/Trigger]
+set_property -dict [list CONFIG.DIN_TO {1} CONFIG.DIN_FROM {1} CONFIG.DOUT_WIDTH {1} CONFIG.DIN_WIDTH {32}] [get_bd_cells trigger_to_calibrate]
+
+# Making the coeffiecients available to be read
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 coefficient_concat
+connect_bd_net [get_bd_pins auto_calibrate/scale_out] [get_bd_pins coefficient_concat/In0]
+connect_bd_net [get_bd_pins auto_calibrate/offset_out] [get_bd_pins coefficient_concat/In1]
+connect_bd_net [get_bd_pins coefficient_concat/dout] [get_bd_pins sts/Coefficients]
+#################################################################################################################
+
 
 # Need slice to connect to LEDs
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 led_slice
@@ -332,6 +369,11 @@ connect_bd_net [get_bd_pins module_const/dout] [get_bd_pins led_slice/Din]
 connect_bd_net [get_bd_pins led_slice/Dout] [get_bd_pins led_concat/In0]
 connect_bd_net [get_bd_pins data_collector/tvalid] [get_bd_pins led_concat/In1]
 connect_bd_net [get_bd_ports led_o] [get_bd_pins led_concat/Dout]
+
+# Grouping into a Hierarchy
+group_bd_cells MLP_calc [get_bd_cells temp_SPR] [get_bd_cells vFloat_div] [get_bd_cells set_voltage] [get_bd_cells temp_calc] [get_bd_cells vfloat_calc] [get_bd_cells isat_calc] [get_bd_cells Temp_div] [get_bd_cells iSat_SPR] [get_bd_cells iSat_div] [get_bd_cells vfloat_SPR]
+
+set_property name Bias [get_bd_pins MLP_calc/volt1]
 
 validate_bd_design
 

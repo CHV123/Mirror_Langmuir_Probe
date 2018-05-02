@@ -23,15 +23,15 @@ entity DataCollect is
     clk_en     : in std_logic;
 
     tvalid : out std_logic;
-    tdata  : out std_logic_vector(63 downto 0)
+    tdata  : out std_logic_vector(31 downto 0)
     );
 
 end entity DataCollect;
 
 architecture Behavioral of DataCollect is
   signal switch      : std_logic                     := '0';
-  signal data_hold_v : std_logic_vector(63 downto 0) := (others => '0');
-  signal data_hold_t : std_logic_vector(63 downto 0) := (others => '0');
+  signal data_hold_v : std_logic_vector(31 downto 0) := (others => '0');
+  signal data_hold_t : std_logic_vector(31 downto 0) := (others => '0');
   signal temp_set    : std_logic                     := '0';
   signal delivered   : std_logic                     := '0';
 begin  -- architecture Behavioral
@@ -56,15 +56,19 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: data
   volt_collect : process (adc_clk) is
-    variable counter : unsigned(7 downto 0)          := (others => '0');
-    variable collate : std_logic_vector(31 downto 0) := (others => '0');
+    variable counter : unsigned(2 downto 0)          := (others => '0');
+    variable collate : std_logic_vector(13 downto 0) := (others => '0');
   begin  -- process data_collect
     if rising_edge(adc_clk) then
       if clk_en = '1' then
         if switch = '1' then
-          collate := "0" & std_logic_vector(counter) & "0" & v_in(13 downto 3) & v_out(13 downto 3);
+          collate := std_logic_vector(shift_right(signed(v_in), 3)(6 downto 0) &
+                                      shift_right(signed(v_out), 3)(6 downto 0));
         elsif switch = '0' then
-          data_hold_v <= "0" & std_logic_vector(counter) & "0" & v_in(13 downto 3) & v_out(13 downto 3) & collate;
+          data_hold_v <= "0" & std_logic_vector(counter) &
+                         std_logic_vector(shift_right(signed(v_in), 3)(6 downto 0) &
+                                          shift_right(signed(v_out), 3)(6 downto 0)) &
+                         collate;
         end if;
         counter := counter + 1;
       else
@@ -78,13 +82,17 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: v_data
   var_collect : process (adc_clk) is
-    variable counter : unsigned(13 downto 0) := (others => '0');
+    variable counter : unsigned(3 downto 0) := (others => '0');
   begin  -- process var_collect
     if rising_edge(adc_clk) then
       if clk_en = '1' then
         if Temp_valid = '1' then
-          data_hold_t <= "1" & std_logic_vector(counter) & Temp & iSat(15 downto 15) & "1" & iSat(14 downto 0) & vFloat;
-          temp_set    <= '1';
+          data_hold_t <= "1" &
+                         std_logic_vector(counter) &
+                         std_logic_vector(shift_right(signed(Temp), 2)(8 downto 0) &
+                                          shift_right(signed(iSat), 2)(8 downto 0) &
+                                          shift_right(signed(vFloat), 2)(8 downto 0));
+          temp_set <= '1';
         end if;
         if delivered = '1' and temp_set = '1' then
           temp_set <= '0';

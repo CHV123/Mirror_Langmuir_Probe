@@ -45,7 +45,7 @@ V_LP_tvalid <= '1';
 	begin
 		if (rising_edge(adc_clk)) then
 			-- Passing electron temerature through to the Div block 
-			T_electron_out <=  T_electron_in;
+			T_electron_out <= T_electron_in;
 
 			-- Calculate the diffrence in voltages
 

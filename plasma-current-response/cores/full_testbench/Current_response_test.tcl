@@ -293,9 +293,9 @@ proc create_root_design { parentCell } {
   set div_gen_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_0 ]
   set_property -dict [ list \
    CONFIG.dividend_and_quotient_width {14} \
-   CONFIG.divisor_width {16} \
-   CONFIG.fractional_width {13} \
-   CONFIG.latency {31} \
+   CONFIG.divisor_width {14} \
+   CONFIG.fractional_width {12} \
+   CONFIG.latency {30} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_0
 

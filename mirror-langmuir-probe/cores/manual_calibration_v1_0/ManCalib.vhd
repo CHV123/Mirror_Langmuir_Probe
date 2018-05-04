@@ -39,47 +39,64 @@ end entity Calibrate;
 
 architecture behaviour of Calibrate is
 
-  signal scale_proxy : signed(13 downto 0) := to_signed(1024, 14);
+  signal scale_proxy  : signed(13 downto 0) := to_signed(1024, 14);
   signal offset_proxy : signed(13 downto 0) := to_signed(0, 14);
+
+  signal volt_proxy : signed(27 downto 0) := to_signed(0, 28);
 
 begin  -- architecture behaviour
 
-  -- purpose: Process to apply the scaling and offset to the input voltage
+  -- purpose: Process to apply the offset to the scaled input voltage
   -- type   : sequential
   -- inputs : adc_clk, clk_rst, volt_in, scale, offset
   -- outputs: volt_out
-  apply_proc : process (adc_clk) is
-    variable volt_proxy : signed(27 downto 0) := (others => '0');
+  offset_proc : process (adc_clk) is
   begin  -- process apply_proc
     if rising_edge(adc_clk) then        -- rising clock edge
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_out <= (others => '0');
       else
-        volt_proxy := shift_right(scale_proxy*signed(volt_in), 10);
-        volt_out   <= std_logic_vector(volt_proxy(13 downto 0) + offset_proxy);
+        volt_out <= std_logic_vector(volt_proxy(13 downto 0) + offset_proxy);
       end if;
     end if;
-  end process apply_proc;
+  end process offset_proc;
+
+  -- purpose: Process to apply the scaling to the input voltage
+  -- type   : sequential
+  -- inputs : adc_clk, clk_rst, volt_in, scale, offset
+  -- outputs: volt_out
+  scale_proc : process (adc_clk) is
+  --variable volt_proxy : signed(27 downto 0) := (others => '0');
+  begin  -- process apply_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if clk_rst = '1' then             -- synchronous reset (active high)
+        volt_proxy <= (others => '0');
+      else
+        volt_proxy <= shift_right(scale_proxy*signed(volt_in), 10);
+        
+      end if;
+    end if;
+  end process scale_proc;
 
   -- purpose: Process to set the scale and offset values and reset them to defaults
   -- type   : sequential
   -- inputs : adc_clk, clk_rst, scale
   -- outputs: scale_proxy, offset_proxy
-  proxy_proc: process (adc_clk) is
+  proxy_proc : process (adc_clk) is
   begin  -- process proxy_proc
-    if rising_edge(adc_clk) then       -- rising clock edge
+    if rising_edge(adc_clk) then        -- rising clock edge
       if clk_rst = '1' then             -- synchronous reset (active high)
-        scale_proxy <= to_signed(1025, 14);
+        scale_proxy  <= to_signed(1025, 14);
         offset_proxy <= to_signed(0, 14);
       else
         if scale = std_logic_vector(to_signed(0, 14)) then
           scale_proxy <= scale_proxy;
-        else          
+        else
           scale_proxy <= signed(scale);
         end if;
         if offset = std_logic_vector(to_signed(0, 14)) then
           offset_proxy <= offset_proxy;
-        else          
+        else
           offset_proxy <= signed(offset);
         end if;
       end if;

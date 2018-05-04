@@ -29,12 +29,11 @@ def int2signed(convInt):
 driver.set_period(1250)
 driver.set_acquisition_length(int(250))
 
-driver.set_trigger(int(0b00000000000000000000000000000010))
+driver.calibrate()
 time.sleep(0.01)
-print(bin(driver.get_temperature()))
+print(bin(driver.get_Temperature()))
 
-driver.set_trigger(int(0b00000000000000000000000000000001))
-driver.set_trigger(0)
+driver.set_trigger()
 
 while True:
     try:

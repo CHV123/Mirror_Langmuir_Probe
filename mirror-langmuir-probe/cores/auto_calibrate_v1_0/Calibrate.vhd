@@ -12,9 +12,9 @@ use ieee.numeric_std.all;
 entity Calibrate is
 
   port (
-    adc_clk : in std_logic;
-    clk_rst : in std_logic;
-    volt_in : in std_logic_vector(13 downto 0);
+    adc_clk   : in std_logic;
+    clk_rst   : in std_logic;
+    volt_in   : in std_logic_vector(13 downto 0);
 
     volt_out   : out std_logic_vector(13 downto 0);
     scale_out  : out std_logic_vector(13 downto 0);

@@ -19,7 +19,11 @@ class MLP(object):
 
 
     @command()
-    def set_trigger(self, trigger):
+    def set_trigger(self):
+        pass
+    
+    @command()
+    def calibrate(self):
         pass
     
     @command()
@@ -31,7 +35,23 @@ class MLP(object):
         pass
 
     @command()
-    def set_acquisition_length(self, period):
+    def set_acquisition_length(self, acquisition_length):
+        pass
+
+    @command
+    def set_scale_LB(self, scale_LB):
+        pass
+
+    @command
+    def set_scale_PC(self, scale_PC):
+        pass
+
+    @command
+    def set_offset_LB(self, offset_LB):
+        pass
+
+    @command
+    def set_offset_PC(self, offset_PC):
         pass
     
     @command()
@@ -44,24 +64,7 @@ class MLP(object):
 
     @command()
     def get_vFloat(self):
-        return self.client.recv_uint32()
-
-    @command()
-    def get_Coefficients(self):
-        return self.client.recv_uint32()    
-    
-
-    # def set_dac(self):
-    #     @command()
-    #     def set_dac_data(self, data):
-    #         pass
-    #     dac_data_1 = np.uint32(np.mod(np.floor(8192 * self.dac[0, :]) + 8192, 16384) + 8192)
-    #     dac_data_2 = np.uint32(np.mod(np.floor(8192 * self.dac[1, :]) + 8192, 16384) + 8192)
-    #     set_dac_data(self, dac_data_1 + 65536 * dac_data_2)
-
-    # @command()
-    # def get_fifo_length(self):
-    #     return self.client.recv_uint32()
+        return self.client.recv_uint32()   
 
     @command()
     def get_MLP_data(self):
@@ -71,7 +74,7 @@ class MLP(object):
     def get_buffer_length(self):
         return self.client.recv_uint32() 
 
-    # @command()
-    # def reset_fifo(self):
-    #     pass
+    @command()
+    def reset_fifo(self):
+        pass
 

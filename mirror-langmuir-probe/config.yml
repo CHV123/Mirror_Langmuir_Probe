@@ -16,7 +16,8 @@ cores:
   - instruments/mirror-langmuir-probe/cores/data_collector_v1_0
   - instruments/mirror-langmuir-probe/cores/acquire_trigger_v1_0
   - instruments/mirror-langmuir-probe/cores/moving_average_v1_0
-  - instruments/mirror-langmuir-probe/cores/auto_calibrate_v1_0
+  - instruments/mirror-langmuir-probe/cores/manual_calibration_v1_0
+
 memory:
   - name: control
     offset: '0x60000000'
@@ -33,6 +34,10 @@ control_registers:
   - Trigger
   - Period
   - Acquisition_length
+  - Scale_LB
+  - Offset_LB
+  - Scale_PC
+  - Offset_PC
 
 status_registers:
   - adc[n_adc]
@@ -40,7 +45,6 @@ status_registers:
   - Isaturation
   - vFloat
   - Timestamp
-  - Coefficients
 
 parameters:
   fclk0: 166666667

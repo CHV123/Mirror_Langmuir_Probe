@@ -40,9 +40,15 @@ public:
     ctl.write<reg::led>(led);
   }
 
-  void set_trigger(uint32_t trigger) {
-    ctl.write<reg::Trigger>(trigger);
+  void set_trigger() {
+    ctl.set_bit<reg::Trigger, 0>();
+    ctl.clear_bit<reg::Trigger, 0>();
   }
+
+  // void calibrate() {
+  //   ctl.set_bit<reg::Trigger, 1>();
+  //   ctl.clear_bit<reg::Trigger, 1>();
+  // }
 
   void set_period(uint32_t period) {
     ctl.write<reg::Period>(period);
@@ -51,7 +57,23 @@ public:
   void set_acquisition_length(uint32_t acquisition_length) {
     ctl.write<reg::Acquisition_length>(acquisition_length);
   }
+  
+  void set_scale_LB(uint32_t scale_LB) {
+    ctl.write<reg::Scale_LB>(scale_LB);
+  }
 
+  void set_scale_PC(uint32_t scale_PC) {
+    ctl.write<reg::Scale_PC>(scale_PC);
+  }
+
+  void set_offset_LB(uint32_t offset_LB) {
+    ctl.write<reg::Offset_LB>(offset_LB);
+  } 
+
+  void set_offset_PC(uint32_t offset_PC) {
+    ctl.write<reg::Offset_PC>(offset_PC);
+  }
+  
   uint32_t get_Temperature() {
     uint32_t temp_value = sts.read<reg::Temperature>();
     return temp_value;
@@ -70,11 +92,6 @@ public:
   uint32_t get_Timestamp() {
     uint32_t timestamp_value = sts.read<reg::Timestamp>();
     return timestamp_value;
-  }
-
-  uint32_t get_Coefficients() {
-    uint32_t coefficients_value = sts.read<reg::Coefficients>();
-    return coefficients_value;
   }
   
   //Adc FIFO
@@ -111,10 +128,13 @@ public:
   std::vector<uint32_t>& get_MLP_data() {
     
     //ctx.log<INFO>("Found Data");
-    //ctx.log<INFO>("adc_data size: %d", adc_data.size());
+    ctx.log<INFO>("adc_data size: %d", adc_data.size());
+    //ctx.log<INFO>("collected cleared: %d", collected);
     
     dataAvailable = false;
-   
+    
+    ctx.log<INFO>("Data is available: %s", dataAvailable ? "true" : "false");
+		  
     return adc_data;
   }
   
@@ -135,7 +155,7 @@ private:
   void fifo_acquisition_thread();
   uint32_t fill_buffer(uint32_t);
   // Member variables
-  bool dataAvailable = false;
+  std::atomic<bool> dataAvailable{false};
   std::atomic<uint32_t> collected{0};         //number of currently collected data
 };
 
@@ -147,7 +167,7 @@ inline void MLP::start_fifo_acquisition() {
 }
 
 inline void MLP::fifo_acquisition_thread() {
-  constexpr auto fifo_sleep_for = std::chrono::microseconds(5000);
+  constexpr auto fifo_sleep_for = std::chrono::nanoseconds(5000);
   fifo_acquisition_started = true;
   ctx.log<INFO>("Starting fifo acquisition");
   adc_data.reserve(16777216);
@@ -158,8 +178,13 @@ inline void MLP::fifo_acquisition_thread() {
   
   // While loop to reserve the number of samples needed to be collected
   while (fifo_acquisition_started){
+    // if (dataAvailable == true) {
+    //   ctx.log<INFO>("Reached checkpoint alpha");
+    // } else {
+    //   ctx.log<INFO>("Reached checkpoint charlie");
+    // }
     if (collected == 0){
-      // Checking that data has not yet been collected
+      // Checking that data has not yet been collected      
       if ((dataAvailable == false) && (adc_data.size() > 0)){
 	// Sleep to avoid a race condition while data is being transferred
 	std::this_thread::sleep_for(fifo_sleep_for);
@@ -170,6 +195,9 @@ inline void MLP::fifo_acquisition_thread() {
     }
     
     dropped = fill_buffer(dropped);
+    if (dropped > 0){
+      ctx.log<INFO>("Dropped samples: %d", dropped);
+    }
     // std::this_thread::sleep_for(fifo_sleep_for);
   }// While loop
 }
@@ -192,10 +220,11 @@ inline uint32_t MLP::fill_buffer(uint32_t dropped) {
   }
   // if statement for setting the acquisition completed flag
   if (samples == 0) {
-    dataAvailable = true;
-    collected = 0;
-    dropped = 0;
-    //ctx.log<INFO>("collected cleared: %d", collected);
+    if (collected > 0) {
+      dataAvailable = true;
+      collected = 0;
+      dropped = 0;
+    }
   }
   return dropped;
 }

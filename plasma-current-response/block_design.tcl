@@ -97,7 +97,7 @@ connect_bd_net [get_bd_pins current_response_0/T_electron_out] [get_bd_pins div_
 connect_bd_net [get_bd_pins current_response_0/V_LP] [get_bd_pins div_gen_0/s_axis_dividend_tdata]
 connect_bd_net [get_bd_pins current_response_0/V_LP_tvalid] [get_bd_pins div_gen_0/s_axis_dividend_tvalid]
 connect_bd_net [get_bd_pins current_response_0/T_electron_out_tvalid] [get_bd_pins div_gen_0/s_axis_divisor_tvalid]
-connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac2]
+connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac1]
 connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins sts/Current]
 connect_bd_net [get_bd_pins current_response_0/Bias_voltage] [get_bd_pins adc_dac/adc1]
 connect_bd_net [get_bd_pins current_response_0/Resistence] [get_bd_pins ctl/Resistence]
@@ -179,8 +179,8 @@ connect_bd_net [get_bd_pins Div_int_delay_0/adc_clk] [get_bd_pins adc_dac/adc_cl
 ##################################### Connected all the Blocks ######################################################
 
 
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins adc_dac/dac1]
-
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins adc_dac/dac2]
+connect_bd_net [get_bd_pins sts/Bias] [get_bd_pins adc_dac/adc1]
 
 
 

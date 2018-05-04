@@ -56,10 +56,19 @@ class PCS
         ctl.write<reg::Switch>(Switch);
     }
 
+
     uint32_t get_Current() {
         uint32_t Current_value = sts.read<reg::Current>();
         return Current_value;
     } 
+
+    uint32_t get_Bias() {
+        uint32_t Bias_value = sts.read<reg::Bias>();
+        return Bias_value;
+    } 
+
+
+
 
     // void set_dac_data(const std::array<uint32_t, dac_size>& data) {
     //     dac_map.write_array(data);

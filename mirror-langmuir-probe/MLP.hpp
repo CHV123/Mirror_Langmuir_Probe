@@ -41,8 +41,8 @@ public:
   }
 
   void set_trigger() {
-    ctl.set_bit<reg::Trigger, 0>();
-    ctl.clear_bit<reg::Trigger, 0>();
+    ctl.set_bit<reg::trigger, 0>();
+    ctl.clear_bit<reg::trigger, 0>();
   }
 
   // void calibrate() {

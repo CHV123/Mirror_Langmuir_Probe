@@ -42,6 +42,19 @@ class PCS(object):
     def set_Switch(self, Switch):
         pass
 
+    @command()
+    def set_Resistence(self, Resistence):
+        pass
+
+    @command()
+    def set_Calibration_offset(self, Calibration_offset):
+        pass
+
+    @command()
+    def set_Calibration_scale(self, Calibration_scale):
+        pass
+
+
 
     @command()
     def get_Current(self):
@@ -51,12 +64,17 @@ class PCS(object):
     def get_Bias(self):
         return self.client.recv_uint32()
 
+    @command()
+    def get_fifo_length(self):
+        return self.client.recv_uint32()
 
+    @command()
+    def get_buffer_length(self):
+        return self.client.recv_uint32()
 
-
-
-
-
+    @command()
+    def get_PCR_data(self):
+        return self.client.recv_vector(dtype='uint32')
 
 
 

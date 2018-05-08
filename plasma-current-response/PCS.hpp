@@ -20,21 +20,32 @@ namespace Fifo_regs {
 }
 
 constexpr uint32_t dac_size = mem::dac_range/sizeof(uint32_t);
-
+constexpr uint32_t adc_buff_size = 16777216;
 
 class PCS
 {
   public:
-    PCS(Context& ctx)
-    : ctl(ctx.mm.get<mem::control>())
+    PCS(Context& ctx_)
+    : ctx(ctx_)
+    , ctl(ctx.mm.get<mem::control>())
     , sts(ctx.mm.get<mem::status>())
-    // , adc_fifo_map(ctx.mm.get<mem::adc_fifo>())
+    , adc_fifo_map(ctx.mm.get<mem::adc_fifo>())
+    , adc_data(adc_buff_size)
     // , dac_map(ctx.mm.get<mem::dac>())
     {
         start_fifo_acquisition();
     }
 
     // PCS generator
+
+    void set_trigger() {
+      ctl.set_bit<reg::trigger, 0>();
+      ctl.clear_bit<reg::trigger, 0>();
+    }
+
+    void set_Time_in(uint32_t Time_in) {
+        ctl.write<reg::Time_in>(Time_in);
+    }
 
     void set_ISat(uint32_t ISat) {
         ctl.write<reg::ISat>(ISat);
@@ -56,6 +67,13 @@ class PCS
         ctl.write<reg::Switch>(Switch);
     }
 
+    void set_Calibration_offset(uint32_t Calibration_offset) {
+        ctl.write<reg::Calibration_offset>(Calibration_offset);
+    }
+
+    void set_Calibration_scale(uint32_t Calibration_scale) {
+        ctl.write<reg::Calibration_scale>(Calibration_scale);
+    }
 
     uint32_t get_Current() {
         uint32_t Current_value = sts.read<reg::Current>();
@@ -65,10 +83,7 @@ class PCS
     uint32_t get_Bias() {
         uint32_t Bias_value = sts.read<reg::Bias>();
         return Bias_value;
-    } 
-
-
-
+    }
 
     // void set_dac_data(const std::array<uint32_t, dac_size>& data) {
     //     dac_map.write_array(data);
@@ -76,21 +91,40 @@ class PCS
 
     // Adc FIFO
 
-    // uint32_t get_fifo_occupancy() {
-    //     return adc_fifo_map.read<Fifo_regs::rdfo>();
-    // }
+    uint32_t get_fifo_occupancy() {
+       return adc_fifo_map.read<Fifo_regs::rdfo>();
+    }
 
-    // void reset_fifo() {
-    //     adc_fifo_map.write<Fifo_regs::rdfr>(0x000000A5);
-    // }
+    void reset_fifo() {
+        adc_fifo_map.write<Fifo_regs::rdfr>(0x000000A5);
+    }
 
-    // uint32_t read_fifo() {
-    //     return adc_fifo_map.read<Fifo_regs::rdfd>();
-    // }
+    uint32_t read_fifo() {
+        return adc_fifo_map.read<Fifo_regs::rdfd>();
+    }
 
-    // uint32_t get_fifo_length() {
-    //     return (adc_fifo_map.read<Fifo_regs::rlr>() & 0x3FFFFF) >> 2;
-    // }
+    uint32_t get_fifo_length() {
+       return (adc_fifo_map.read<Fifo_regs::rlr>() & 0x3FFFFF) >> 2;
+    }
+
+     // Function to return the buffer length
+    uint32_t get_buffer_length() {
+       return collected;
+    }
+
+     // Function to return data
+  std::vector<uint32_t>& get_PCR_data() {
+    
+    //ctx.log<INFO>("Found Data");
+    ctx.log<INFO>("adc_data size: %d", adc_data.size());
+    //ctx.log<INFO>("collected cleared: %d", collected);
+    
+    dataAvailable = false;
+    
+    ctx.log<INFO>("Data is available: %s", dataAvailable ? "true" : "false");
+          
+    return adc_data;
+  }
 
     // void wait_for(uint32_t n_pts) {
     //     do {} while (get_fifo_length() < n_pts);
@@ -98,29 +132,24 @@ class PCS
 
 
 
-    // const auto& get_fifo_buffer() {
-    //     return fifo_buffer;
-    // }
-
     void start_fifo_acquisition();
 
   private:
+    Context& ctx;
     Memory<mem::control>& ctl;
     Memory<mem::status>& sts;
-    // Memory<mem::adc_fifo>& adc_fifo_map;
+    Memory<mem::adc_fifo>& adc_fifo_map;
     // Memory<mem::dac>& dac_map;
 
 
 
-    // std::vector<uint32_t> adc_data;
+    std::vector<uint32_t> adc_data;
 
-
-    // static constexpr uint32_t fifo_buff_size = 1024;
-
-    // std::array<uint32_t, fifo_buff_size> fifo_buffer;
+    uint32_t fill_buffer(uint32_t);
 
     std::atomic<bool> fifo_acquisition_started{false};
-    // std::atomic<uint32_t> fifo_buff_idx{0};
+    std::atomic<bool> dataAvailable{false};
+    std::atomic<uint32_t> collected{0};         //number of currently collected data
 
     std::thread fifo_thread;
     void fifo_acquisition_thread();
@@ -135,21 +164,68 @@ inline void PCS::start_fifo_acquisition() {
     }
 }
 
-inline void PCS::fifo_acquisition_thread()
-{
-    constexpr auto fifo_sleep_for = std::chrono::microseconds(5000);
-
-    fifo_acquisition_started = true;
-
-    while (fifo_acquisition_started) {
-        // const uint32_t n_pts = get_fifo_length();
-
-        // for (size_t i = 0; i < n_pts; i++) {
-        //     fifo_buffer[fifo_buff_idx] = read_fifo();
-        //     fifo_buff_idx = (fifo_buff_idx + 1) % fifo_buff_size;
-        // }
-        std::this_thread::sleep_for(fifo_sleep_for);
+inline void PCS::fifo_acquisition_thread() {
+  constexpr auto fifo_sleep_for = std::chrono::nanoseconds(5000);
+  fifo_acquisition_started = true;
+  ctx.log<INFO>("Starting fifo acquisition");
+  adc_data.reserve(16777216);
+  adc_data.resize(0);
+  //empty_vector.resize(0);
+  
+  uint32_t dropped=0;
+  
+  // While loop to reserve the number of samples needed to be collected
+  while (fifo_acquisition_started){
+    // if (dataAvailable == true) {
+    //   ctx.log<INFO>("Reached checkpoint alpha");
+    // } else {
+    //   ctx.log<INFO>("Reached checkpoint charlie");
+    // }
+    if (collected == 0){
+      // Checking that data has not yet been collected      
+      if ((dataAvailable == false) && (adc_data.size() > 0)){
+    // Sleep to avoid a race condition while data is being transferred
+    std::this_thread::sleep_for(fifo_sleep_for);
+    // Clearing vector back to zero
+    adc_data.resize(0);
+    ctx.log<INFO>("vector cleared, adc_data size: %d", adc_data.size());
+      }
     }
+    
+    dropped = fill_buffer(dropped);
+    if (dropped > 0){
+      ctx.log<INFO>("Dropped samples: %d", dropped);
+    }
+    // std::this_thread::sleep_for(fifo_sleep_for);
+  }// While loop
 }
+
+// Member function to fill buffer array
+inline uint32_t PCS::fill_buffer(uint32_t dropped) {
+    // Retrieving the number of samples to collect
+  uint32_t samples=get_fifo_length();
+  //ctx.log<INFO>("Samples: %d", samples); 
+  // Checking for dropped samples
+  if (samples >= 32768){    
+    dropped += 1;
+  }
+  // Collecting samples in buffer
+  if (samples > 0) {
+    for (size_t i=0; i < samples; i++){   
+      adc_data.push_back(read_fifo());    
+      collected = collected + 1;
+    }
+  }
+  // if statement for setting the acquisition completed flag
+  if (samples == 0) {
+    if (collected > 0) {
+      dataAvailable = true;
+      collected = 0;
+      dropped = 0;
+    }
+  }
+  return dropped;
+}
+
 
 #endif // __DRIVERS_PCS_HPP__

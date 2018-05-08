@@ -67,13 +67,13 @@ begin
 	wait for adc_clk_period*10;
 	Isat <= STD_LOGIC_vector(to_signed(2,Isat'length));
 	Resistence <= STD_LOGIC_vector(to_signed(50,Resistence'length));
-	Temp <= STD_LOGIC_vector(to_signed(50,Temp'length));
-	Vf <= STD_LOGIC_vector(to_signed(-40,Vf'length));
-	Bias <= STD_LOGIC_vector(to_signed(-160,Bias'length));
+	Temp <= STD_LOGIC_vector(to_signed(100,Temp'length));
+	Vf <= STD_LOGIC_vector(to_signed(0,Vf'length));
+	Bias <= STD_LOGIC_vector(to_signed(-300,Bias'length));
 	wait for adc_clk_period*10;
-	Bias <= STD_LOGIC_vector(to_signed(-5,Bias'length));
+	Bias <= STD_LOGIC_vector(to_signed(100,Bias'length));
 	wait for adc_clk_period*10;
-	Bias <= STD_LOGIC_vector(to_signed(-40,Bias'length));
+	Bias <= STD_LOGIC_vector(to_signed(0,Bias'length));
 
 
 

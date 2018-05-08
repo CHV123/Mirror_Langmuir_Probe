@@ -46,36 +46,36 @@ for {set i 0} {$i < [get_parameter n_adc]} {incr i} {
 #}
 
 
-## Use AXI Stream clock converter (ADC clock -> FPGA clock)
-#set intercon_idx 0
-#set idx [add_master_interface $intercon_idx]
-#cell xilinx.com:ip:axis_clock_converter:1.1 adc_clock_converter {
-#  TDATA_NUM_BYTES 4
-#} {
-#  s_axis_aresetn $rst_adc_clk_name/peripheral_aresetn
-#  m_axis_aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
-#  s_axis_aclk $adc_clk
-#  m_axis_aclk [set ps_clk$intercon_idx]
-#}
+# Use AXI Stream clock converter (ADC clock -> FPGA clock)
+set intercon_idx 0
+set idx [add_master_interface $intercon_idx]
+cell xilinx.com:ip:axis_clock_converter:1.1 adc_clock_converter {
+  TDATA_NUM_BYTES 4
+} {
+  s_axis_aresetn $rst_adc_clk_name/peripheral_aresetn
+  m_axis_aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
+  s_axis_aclk $adc_clk
+  m_axis_aclk [set ps_clk$intercon_idx]
+}
 
-## Add AXI stream FIFO to read pulse data from the PS
-#cell xilinx.com:ip:axi_fifo_mm_s:4.1 adc_axis_fifo {
-#  C_USE_TX_DATA 0
-#  C_USE_TX_CTRL 0
-#  C_USE_RX_CUT_THROUGH true
-#  C_RX_FIFO_DEPTH 16384
-#  C_RX_FIFO_PF_THRESHOLD 8192
-#} {
-#  s_axi_aclk [set ps_clk$intercon_idx]
-#  s_axi_aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
-#  S_AXI [set interconnect_${intercon_idx}_name]/M${idx}_AXI
-#  AXI_STR_RXD adc_clock_converter/M_AXIS
-#}
+# Add AXI stream FIFO to read pulse data from the PS
+cell xilinx.com:ip:axi_fifo_mm_s:4.1 adc_axis_fifo {
+  C_USE_TX_DATA 0
+  C_USE_TX_CTRL 0
+  C_USE_RX_CUT_THROUGH true
+  C_RX_FIFO_DEPTH 32768
+  C_RX_FIFO_PF_THRESHOLD 32760
+} {
+  s_axi_aclk [set ps_clk$intercon_idx]
+  s_axi_aresetn [set rst${intercon_idx}_name]/peripheral_aresetn
+  S_AXI [set interconnect_${intercon_idx}_name]/M${idx}_AXI
+  AXI_STR_RXD adc_clock_converter/M_AXIS
+}
 
-#assign_bd_address [get_bd_addr_segs adc_axis_fifo/S_AXI/Mem0]
-#set memory_segment  [get_bd_addr_segs /${::ps_name}/Data/SEG_adc_axis_fifo_Mem0]
-#set_property offset [get_memory_offset adc_fifo] $memory_segment
-#set_property range  [get_memory_range adc_fifo]  $memory_segment
+assign_bd_address [get_bd_addr_segs adc_axis_fifo/S_AXI/Mem0]
+set memory_segment  [get_bd_addr_segs /${::ps_name}/Data/SEG_adc_axis_fifo_Mem0]
+set_property offset [get_memory_offset adc_fifo] $memory_segment
+set_property range  [get_memory_range adc_fifo]  $memory_segment
 
 ################################### Make all the Blocks ################################################3
 create_bd_cell -type ip -vlnv PSFC:user:current_response:1.0 current_response_0
@@ -88,6 +88,9 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_Temp
 create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_Vfloating
 create_bd_cell -type ip -vlnv PSFC:user:input_control:1.0 input_control_0
 create_bd_cell -type ip -vlnv PSFC:user:Div_int_delay:1.0 Div_int_delay_0
+create_bd_cell -type ip -vlnv PSFC:user:manual_calibration:1.0 manual_calibration_0
+create_bd_cell -type ip -vlnv PSFC:user:data_collector:1.0 data_collector_0
+create_bd_cell -type ip -vlnv PSFC:user:acquire_trigger:1.0 acquire_trigger_0
 ################################### All Blocks Made #####################################################
 
 ################################### Connect All the Blocks ##############################################
@@ -99,8 +102,9 @@ connect_bd_net [get_bd_pins current_response_0/V_LP_tvalid] [get_bd_pins div_gen
 connect_bd_net [get_bd_pins current_response_0/T_electron_out_tvalid] [get_bd_pins div_gen_0/s_axis_divisor_tvalid]
 connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac1]
 connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins sts/Current]
-connect_bd_net [get_bd_pins current_response_0/Bias_voltage] [get_bd_pins adc_dac/adc1]
 connect_bd_net [get_bd_pins current_response_0/Resistence] [get_bd_pins ctl/Resistence]
+#connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins current_response_0/V_curr]
+connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins adc_dac/adc1]
 ##################################### Current Response Module #######################################################
 
 
@@ -165,6 +169,10 @@ connect_bd_net [get_bd_pins blk_mem_gen_Vfloating/douta] [get_bd_pins input_cont
 connect_bd_net [get_bd_pins input_control_0/T_e] [get_bd_pins current_response_0/T_electron_in]
 connect_bd_net [get_bd_pins input_control_0/V_f] [get_bd_pins current_response_0/V_floating]
 connect_bd_net [get_bd_pins input_control_0/Isat] [get_bd_pins current_response_0/I_sat]
+connect_bd_net [get_bd_pins data_collector_0/Temp] [get_bd_pins input_control_0/T_e]
+connect_bd_net [get_bd_pins data_collector_0/iSat] [get_bd_pins input_control_0/Isat]
+connect_bd_net [get_bd_pins data_collector_0/vFloat] [get_bd_pins input_control_0/V_f]
+
 ##################################### input control block #################################################################
 
 ##################################### int delay block #####################################################################
@@ -172,15 +180,37 @@ connect_bd_net [get_bd_pins Div_int_delay_0/Int_out] [get_bd_pins current_respon
 connect_bd_net [get_bd_pins Div_int_delay_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
 ##################################### int delay block #####################################################################
 
+##################################### Man Calibration #####################################################################
+connect_bd_net [get_bd_pins manual_calibration_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins manual_calibration_0/volt_in]
+connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins current_response_0/Bias_voltage]
+connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins adc_dac/dac2]
+connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins sts/Bias]
+connect_bd_net [get_bd_pins ctl/Calibration_offset] [get_bd_pins manual_calibration_0/offset]
+connect_bd_net [get_bd_pins ctl/Calibration_scale] [get_bd_pins manual_calibration_0/scale]
+connect_bd_net [get_bd_pins data_collector_0/v_in] [get_bd_pins manual_calibration_0/volt_out]
+##################################### Man Calibration #####################################################################
 
+##################################### Data Collector ######################################################################
+connect_bd_net [get_bd_pins data_collector_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins data_collector_0/tdata] [get_bd_pins adc_clock_converter/s_axis_tdata]
+connect_bd_net [get_bd_pins data_collector_0/tvalid] [get_bd_pins adc_clock_converter/s_axis_tvalid]
+##################################### Data Collector ######################################################################
 
+##################################### Acquisition Trigger #################################################################
+connect_bd_net [get_bd_pins acquire_trigger_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins acquire_trigger_0/acquire_valid] [get_bd_pins data_collector_0/clk_en]
+connect_bd_net [get_bd_pins acquire_trigger_0/trigger] [get_bd_pins ctl/trigger]
+connect_bd_net [get_bd_pins ctl/Time_in] [get_bd_pins acquire_trigger_0/AcqTime]
+connect_bd_net [get_bd_pins acquire_trigger_0/timestamp] [get_bd_pins sts/Time_out]
+##################################### Acquisition Trigger #################################################################
 
 
 ##################################### Connected all the Blocks ######################################################
 
 
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins adc_dac/dac2]
-connect_bd_net [get_bd_pins sts/Bias] [get_bd_pins adc_dac/adc1]
+
+
 
 
 

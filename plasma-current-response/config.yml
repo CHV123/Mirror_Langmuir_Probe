@@ -14,6 +14,9 @@ cores:
   - instruments/plasma-current-response/cores/Profile_Sweep_v1_0 
   - instruments/plasma-current-response/cores/input_control_v1_0
   - instruments/plasma-current-response/cores/Div_int_delay_v1_0
+  - instruments/plasma-current-response/cores/manual_calibration_v1_0
+  - instruments/plasma-current-response/cores/data_collector_v1_0
+  - instruments/plasma-current-response/cores/acquire_trigger_v1_0
 
 memory:
   - name: control
@@ -36,11 +39,16 @@ control_registers:
   - ISat
   - Vfloating
   - Resistence
+  - Calibration_offset
+  - Calibration_scale
+  - trigger
+  - Time_in
 
 status_registers:
   - adc[n_adc]
   - Current
   - Bias
+  - Time_out
 
 parameters:
   fclk0: 166666667

@@ -66,7 +66,8 @@ begin  -- architecture behaviour
   WaveGen_Proc: process
   begin
     -- insert signal assignments here
-    volt_in <= std_logic_vector(to_signed(300 + increment, 14));
+    -- volt_in <= std_logic_vector(to_signed(300 + increment, 14));
+    volt_in <= std_logic_vector(to_signed(-25, 14));
     wait until Clk = '1';
   end process WaveGen_Proc;
 
@@ -77,7 +78,7 @@ begin  -- architecture behaviour
   scale_offset_proc: process is
   begin  -- process scale_offset_proc
     wait for Clk_period*100;
-    scale <= std_logic_vector(to_signed(1024, 14));
+    scale <= std_logic_vector(to_signed(3*1024, 14));
     wait for Clk_period*100;
     offset <= std_logic_vector(to_signed(25*1024, 32));
   end process scale_offset_proc;

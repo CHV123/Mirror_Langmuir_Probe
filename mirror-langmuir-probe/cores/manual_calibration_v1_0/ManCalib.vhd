@@ -56,7 +56,7 @@ begin  -- architecture behaviour
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_out <= (others => '0');
       else
-        volt_out <= std_logic_vector(shift_right(scale_proxy*volt_proxy, 10)(13 downto 0));
+        volt_out <= std_logic_vector(volt_proxy + offset_proxy);
       end if;
     end if;
   end process offset_proc;
@@ -72,8 +72,7 @@ begin  -- architecture behaviour
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_proxy <= (others => '0');
       else
-        volt_proxy <= signed(volt_in) + offset_proxy;
-        
+        volt_proxy <= shift_right(scale_proxy*signed(volt_in), 10)(13 downto 0);        
       end if;
     end if;
   end process scale_proc;

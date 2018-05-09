@@ -67,6 +67,10 @@ class PCS
         ctl.write<reg::Switch>(Switch);
     }
 
+    void set_Capacitance(uint32_t Capacitance) {
+        ctl.write<reg::Capacitance>(Capacitance);
+    }
+
     void set_Calibration_offset(uint32_t Calibration_offset) {
         ctl.write<reg::Calibration_offset>(Calibration_offset);
     }

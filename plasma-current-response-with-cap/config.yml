@@ -43,6 +43,7 @@ control_registers:
   - Calibration_scale
   - trigger
   - Time_in
+  - Capacitance
 
 status_registers:
   - adc[n_adc]

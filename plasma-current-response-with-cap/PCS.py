@@ -29,7 +29,6 @@ class PCS(object):
     def set_Temperature(self, Temperature):
         pass
 
-
     @command()
     def set_Vfloating(self, Vfloating):
         pass
@@ -52,6 +51,10 @@ class PCS(object):
 
     @command()
     def set_Calibration_scale(self, Calibration_scale):
+        pass
+
+    @command()
+    def set_Capacitance(self, Capacitance):
         pass
 
 

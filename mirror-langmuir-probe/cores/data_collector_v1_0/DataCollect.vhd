@@ -62,12 +62,13 @@ begin  -- architecture Behavioral
     if rising_edge(adc_clk) then
       if clk_en = '1' then
         if switch = '1' then
-          collate := std_logic_vector(shift_right(signed(v_in), 3)(6 downto 0) &
-                                      shift_right(signed(v_out), 3)(6 downto 0));
+          collate := std_logic_vector(shift_right(signed(v_in), 0)(6 downto 0)) &
+                     std_logic_vector(shift_right(signed(v_out), 0)(6 downto 0));
         elsif switch = '0' then
-          data_hold_v <= "0" & std_logic_vector(counter) &
-                         std_logic_vector(shift_right(signed(v_in), 3)(6 downto 0) &
-                                          shift_right(signed(v_out), 3)(6 downto 0)) &
+          data_hold_v <= "0" &
+                         std_logic_vector(counter) &
+                         std_logic_vector(shift_right(signed(v_in), 0)(6 downto 0)) &
+                         std_logic_vector(shift_right(signed(v_out), 0)(6 downto 0)) &
                          collate;
         end if;
         counter := counter + 1;

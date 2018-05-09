@@ -129,7 +129,7 @@ begin  -- architecture Behavioral
         else
           divisor_tdata <= "00" & std_logic_vector(to_signed(iSat_guess, 14));
         end if;
-        dividend_tdata  <= "00" & volt_in;
+        dividend_tdata  <= "00" & std_logic_vector(shift_right(signed(volt_in), 3));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
         storeSig        <= signed(volt3);

@@ -6,7 +6,7 @@
 -- Author     : root  <root@cmodws122.psfc.mit.edu>
 -- Company    : 
 -- Created    : 2018-05-04
--- Last update: 2018-05-04
+-- Last update: 2018-05-09
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -37,9 +37,11 @@ architecture behaviour of Calibrate_tb is
   signal adc_clk  : std_logic                     := '0';
   signal clk_rst  : std_logic                     := '0';
   signal scale    : std_logic_vector(13 downto 0) := (others => '0');
-  signal offset   : std_logic_vector(13 downto 0) := (others => '0');
+  signal offset   : std_logic_vector(31 downto 0) := (others => '0');
   signal volt_in  : std_logic_vector(13 downto 0) := (others => '0');
   signal volt_out : std_logic_vector(13 downto 0);
+  
+  signal increment : integer := 0;
 
   -- clock
   constant Clk_period : time := 10 ns;
@@ -64,7 +66,7 @@ begin  -- architecture behaviour
   WaveGen_Proc: process
   begin
     -- insert signal assignments here
-    volt_in <= std_logic_vector(to_signed(300, 14));
+    volt_in <= std_logic_vector(to_signed(300 + increment, 14));
     wait until Clk = '1';
   end process WaveGen_Proc;
 
@@ -75,10 +77,16 @@ begin  -- architecture behaviour
   scale_offset_proc: process is
   begin  -- process scale_offset_proc
     wait for Clk_period*100;
-    scale <= std_logic_vector(to_signed(902, 14));
+    scale <= std_logic_vector(to_signed(1024, 14));
     wait for Clk_period*100;
-    offset <= std_logic_vector(to_signed(40, 14));
+    offset <= std_logic_vector(to_signed(25*1024, 32));
   end process scale_offset_proc;
+  
+  increment_proc: process is
+  begin
+    wait for Clk_period;
+    increment <= increment + 1;
+  end process increment_proc;
 
 end architecture behaviour;
 

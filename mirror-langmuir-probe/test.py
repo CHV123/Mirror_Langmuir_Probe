@@ -28,8 +28,8 @@ def int2signed(convInt):
 
 driver.set_period(1250)
 driver.set_acquisition_length(int(250))
+driver.set_scale_LB(1157)
 
-driver.calibrate()
 time.sleep(0.01)
 print(bin(driver.get_Temperature()))
 

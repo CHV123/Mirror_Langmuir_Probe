@@ -45,11 +45,6 @@ public:
     ctl.clear_bit<reg::Trigger, 0>();
   }
 
-  // void calibrate() {
-  //   ctl.set_bit<reg::Trigger, 1>();
-  //   ctl.clear_bit<reg::Trigger, 1>();
-  // }
-
   void set_period(uint32_t period) {
     ctl.write<reg::Period>(period);
   }

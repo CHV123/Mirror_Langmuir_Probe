@@ -17,6 +17,7 @@ cores:
   - instruments/mirror-langmuir-probe/cores/acquire_trigger_v1_0
   - instruments/mirror-langmuir-probe/cores/moving_average_v1_0
   - instruments/mirror-langmuir-probe/cores/manual_calibration_v1_0
+  - instruments/mirror-langmuir-probe/cores/output_mux_v1_0
 
 memory:
   - name: control

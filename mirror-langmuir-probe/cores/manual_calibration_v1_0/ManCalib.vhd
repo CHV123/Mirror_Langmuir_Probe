@@ -56,7 +56,7 @@ begin  -- architecture behaviour
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_out <= (others => '0');
       else
-        volt_out <= std_logic_vector(volt_proxy + offset_proxy);
+        volt_out <= std_logic_vector(shift_right(scale_proxy * volt_proxy, 10)(13 downto 0));
       end if;
     end if;
   end process offset_proc;
@@ -72,7 +72,7 @@ begin  -- architecture behaviour
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_proxy <= (others => '0');
       else
-        volt_proxy <= shift_right(scale_proxy*signed(volt_in), 10)(13 downto 0);        
+        volt_proxy <= signed(volt_in) + offset_proxy;        
       end if;
     end if;
   end process scale_proc;
@@ -82,7 +82,7 @@ begin  -- architecture behaviour
   -- inputs : adc_clk, clk_rst, scale
   -- outputs: scale_proxy, offset_proxy
   proxy_proc : process (adc_clk) is
-    variable offset_var : signed(27 downto 0) := (others => '0');
+    variable offset_var : signed(13 downto 0) := (others => '0');
   begin  -- process proxy_proc
     if rising_edge(adc_clk) then        -- rising clock edge
       if clk_rst = '1' then             -- synchronous reset (active high)
@@ -97,7 +97,7 @@ begin  -- architecture behaviour
         if offset = std_logic_vector(to_signed(0, 14)) then
           offset_proxy <= to_signed(0, 14);
         else
-          offset_var := shift_right(signed(offset), 10)(13 downto 0) * shift_right(scale_proxy, 10);
+          offset_var := signed(offset(13 downto 0));
           offset_proxy <= offset_var(13 downto 0);
         end if;
       end if;

@@ -24,7 +24,7 @@ architecture behaviour of tb_DataCollect is
       clk_en     : in std_logic;
 
       tvalid : out std_logic;
-      tdata  : out std_logic_vector(63 downto 0)
+      tdata  : out std_logic_vector(31 downto 0)
       );
   end component DataCollect;
 
@@ -40,7 +40,7 @@ architecture behaviour of tb_DataCollect is
 
   -- output signals
   signal tvalid : std_logic                     := '0';
-  signal tdata  : std_logic_vector(63 downto 0) := (others => '0');
+  signal tdata  : std_logic_vector(31 downto 0) := (others => '0');
 
   -- Clock periods
   constant adc_clk_period : time := 8 ns;

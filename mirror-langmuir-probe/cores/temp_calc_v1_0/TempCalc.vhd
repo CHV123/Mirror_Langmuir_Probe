@@ -77,7 +77,7 @@ begin  -- architecture Behavioral
         if output_trigger = '1' then
           if Temp_mask > Temp_max then
             Temp <= std_logic_vector(to_signed(8191, 16));
-          elsif Temp_mask < to_signed(0, Temp_mask'length) then
+          elsif Temp_mask <= to_signed(0, Temp_mask'length) then
             Temp <= std_logic_vector(to_signed(Temp_guess, 16));
           else
             Temp <= std_logic_vector(Temp_mask(15 downto 0));
@@ -141,7 +141,7 @@ begin  -- architecture Behavioral
         else
           divisor_tdata <= "00" & std_logic_vector(to_signed(iSat_guess, 14));
         end if;
-        dividend_tdata  <= "00" & volt_in;
+        dividend_tdata  <= "00" & std_logic_vector(shift_right(signed(volt_in), 3));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
         storeSig        <= signed(volt2);

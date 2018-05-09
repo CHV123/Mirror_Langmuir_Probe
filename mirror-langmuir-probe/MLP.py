@@ -23,10 +23,6 @@ class MLP(object):
         pass
     
     @command()
-    def calibrate(self):
-        pass
-    
-    @command()
     def set_led(self, led):
         pass
     
@@ -38,19 +34,19 @@ class MLP(object):
     def set_acquisition_length(self, acquisition_length):
         pass
 
-    @command
+    @command()
     def set_scale_LB(self, scale_LB):
         pass
 
-    @command
+    @command()
     def set_scale_PC(self, scale_PC):
         pass
 
-    @command
+    @command()
     def set_offset_LB(self, offset_LB):
         pass
 
-    @command
+    @command()
     def set_offset_PC(self, offset_PC):
         pass
     

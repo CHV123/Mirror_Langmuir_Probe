@@ -20,15 +20,16 @@ entity CurrentResponse is
     Expo_result_tvalid : in std_logic;
     Bias_voltage : in std_logic_vector(13 downto 0);
     Resistence : in std_logic_vector(13 downto 0);
-    Cap_Bias : in std_logic_vector(13 downto 0);
-
+    Cap_Bias : in std_logic_vector(15 downto 0);
+    Cap_Bias_tvalid: in std_logic;
 
     V_LP : out std_logic_vector(13 downto 0);
     V_LP_tvalid : out std_logic;
     T_electron_out : out std_logic_vector(13 downto 0);
     T_electron_out_tvalid : out std_logic;
     V_curr : out std_logic_vector(13 downto 0);
-    Cap_charge : out std_logic_vector(13 downto 0);
+    Cap_charge : out std_logic_vector(15 downto 0);
+    Cap_charge_tvalid : out std_logic;
     Curr_out : out std_logic_vector(13 downto 0)
     );
 
@@ -45,23 +46,28 @@ architecture Behavioral of CurrentResponse is
 
   signal Curr : signed(13 downto 0) := (others => '0');
 
-begin  -- architecture Behavioral
-T_electron_out_tvalid <= '1';
-V_LP_tvalid <= '1';
-
+ begin  -- architecture Behavioral
 
 	Pass_through : process(adc_clk)
+	variable T_electron_out_tvalid_mask : std_logic :='0';
+	variable V_LP_tvalid_mask : std_logic :='0';
 	begin
 		if (rising_edge(adc_clk)) then
 			-- Passing electron temerature through to the Div block 
 			T_electron_out <= T_electron_in;
-
+			if to_integer(signed(T_electron_in)) /= 0 then
 			-- Calculate the diffrence in voltages
+			T_electron_out_tvalid_mask := '1';
+			V_LP_tvalid_mask := '1';
+			end if;
+			T_electron_out_tvalid <= T_electron_out_tvalid_mask;
+			V_LP_tvalid <= V_LP_tvalid_mask;
 
-
+            if Cap_Bias_tvalid = '0' then
             V_LP <= std_logic_vector(shift_right(signed(Bias_voltage), 3) - signed(V_floating));
-			--V_LP_mask := std_logic_vector(signed(Bias_voltage) - signed(V_floating));
-           -- V_LP <= V_LP_mask(13 downto 13) & "00" & V_LP_mask(12 downto 0);
+            else
+              V_LP <= std_logic_vector(shift_right(signed(Bias_voltage), 3) - to_signed(to_integer(signed(Cap_Bias)),V_floating'length) - signed(V_floating));  
+            end if;
 		end if;
 	end process;
 
@@ -134,11 +140,14 @@ V_LP_tvalid <= '1';
 
 
     Current_mltp_two : process(adc_clk)
-  	variable Charge_mask : signed(13 downto 0) := (others => '0');
+  	variable Charge_mask : signed(15 downto 0) := (others => '0');
+  	variable Cap_charge_mask_tvalid : std_logic := '0';
     begin
         if (rising_edge(adc_clk)) then
            Charge_mask := Charge_mask + shift_left(Curr,3);
            Cap_charge <= std_logic_vector(Charge_mask);
+           Cap_charge_mask_tvalid := '1';
+           Cap_charge_tvalid <= Cap_charge_mask_tvalid;
         end if; 
     end process;
 

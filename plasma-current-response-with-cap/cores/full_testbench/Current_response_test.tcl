@@ -225,11 +225,13 @@ proc create_root_design { parentCell } {
 
   # Create ports
   set Bias [ create_bd_port -dir I -from 13 -to 0 Bias ]
+  set Capacitance [ create_bd_port -dir I -from 15 -to 0 Capacitance ]
   set Current [ create_bd_port -dir O -from 13 -to 0 Current ]
   set Isat [ create_bd_port -dir I -from 13 -to 0 Isat ]
   set Resistence [ create_bd_port -dir I -from 13 -to 0 Resistence ]
   set Temp [ create_bd_port -dir I -from 13 -to 0 Temp ]
   set Vf [ create_bd_port -dir I -from 13 -to 0 Vf ]
+  set capacitance_tvalid [ create_bd_port -dir I capacitance_tvalid ]
   set clk [ create_bd_port -dir I -type clk clk ]
   set_property -dict [ list \
    CONFIG.FREQ_HZ {125000000} \
@@ -294,13 +296,25 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.dividend_and_quotient_width {14} \
    CONFIG.divisor_width {14} \
-   CONFIG.fractional_width {12} \
-   CONFIG.latency {30} \
+   CONFIG.fractional_width {10} \
+   CONFIG.latency {28} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_0
 
+  # Create instance: div_gen_1, and set properties
+  set div_gen_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 div_gen_1 ]
+  set_property -dict [ list \
+   CONFIG.fractional_width {10} \
+   CONFIG.latency {30} \
+   CONFIG.latency_configuration {Automatic} \
+   CONFIG.remainder_type {Fractional} \
+ ] $div_gen_1
+
   # Create port connections
   connect_bd_net -net Bias_1 [get_bd_ports Bias] [get_bd_pins CurrentResponse_0/Bias_voltage]
+  connect_bd_net -net Capacitance_1 [get_bd_ports Capacitance] [get_bd_pins div_gen_1/s_axis_divisor_tdata]
+  connect_bd_net -net CurrentResponse_0_Cap_charge [get_bd_pins CurrentResponse_0/Cap_charge] [get_bd_pins div_gen_1/s_axis_dividend_tdata]
+  connect_bd_net -net CurrentResponse_0_Cap_charge_tvalid [get_bd_pins CurrentResponse_0/Cap_charge_tvalid] [get_bd_pins div_gen_1/s_axis_dividend_tvalid]
   connect_bd_net -net CurrentResponse_0_T_electron_out [get_bd_pins CurrentResponse_0/T_electron_out] [get_bd_pins div_gen_0/s_axis_divisor_tdata]
   connect_bd_net -net CurrentResponse_0_T_electron_out_tvalid [get_bd_pins CurrentResponse_0/T_electron_out_tvalid] [get_bd_pins div_gen_0/s_axis_divisor_tvalid]
   connect_bd_net -net CurrentResponse_0_V_LP [get_bd_pins CurrentResponse_0/V_LP] [get_bd_pins div_gen_0/s_axis_dividend_tdata]
@@ -314,7 +328,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net Temp_1 [get_bd_ports Temp] [get_bd_pins CurrentResponse_0/T_electron_in]
   connect_bd_net -net Vf_1 [get_bd_ports Vf] [get_bd_pins CurrentResponse_0/V_floating]
   connect_bd_net -net blk_mem_gen_0_douta [get_bd_pins CurrentResponse_0/Expo_result] [get_bd_pins blk_mem_gen_0/douta]
-  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins CurrentResponse_0/adc_clk] [get_bd_pins DivIntDelay_0/adc_clk] [get_bd_pins DivToAdrress_0/adc_clk] [get_bd_pins blk_mem_gen_0/clka] [get_bd_pins div_gen_0/aclk]
+  connect_bd_net -net capacitance_tvalid_1 [get_bd_ports capacitance_tvalid] [get_bd_pins div_gen_1/s_axis_divisor_tvalid]
+  connect_bd_net -net clk_1 [get_bd_ports clk] [get_bd_pins CurrentResponse_0/adc_clk] [get_bd_pins DivIntDelay_0/adc_clk] [get_bd_pins DivToAdrress_0/adc_clk] [get_bd_pins blk_mem_gen_0/clka] [get_bd_pins div_gen_0/aclk] [get_bd_pins div_gen_1/aclk]
   connect_bd_net -net div_gen_0_m_axis_dout_tdata [get_bd_pins DivToAdrress_0/divider_tdata] [get_bd_pins div_gen_0/m_axis_dout_tdata]
   connect_bd_net -net div_gen_0_m_axis_dout_tvalid [get_bd_pins DivToAdrress_0/divider_tvalid] [get_bd_pins div_gen_0/m_axis_dout_tvalid]
 
@@ -335,4 +350,6 @@ proc create_root_design { parentCell } {
 
 create_root_design ""
 
+
+common::send_msg_id "BD_TCL-1000" "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 

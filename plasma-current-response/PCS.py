@@ -22,6 +22,10 @@ class PCS(object):
         pass
 
     @command()
+    def set_led(self, led):
+        pass
+
+    @command()
     def set_ISat(self, ISat):
         pass
 

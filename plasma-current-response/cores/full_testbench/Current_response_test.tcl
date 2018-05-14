@@ -294,7 +294,7 @@ proc create_root_design { parentCell } {
   set_property -dict [ list \
    CONFIG.dividend_and_quotient_width {14} \
    CONFIG.divisor_width {14} \
-   CONFIG.fractional_width {12} \
+   CONFIG.fractional_width {10} \
    CONFIG.latency {30} \
    CONFIG.remainder_type {Fractional} \
  ] $div_gen_0

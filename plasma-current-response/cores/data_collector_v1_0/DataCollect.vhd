@@ -57,17 +57,18 @@ begin  -- architecture Behavioral
   -- outputs: data
   volt_collect : process (adc_clk) is
     variable counter : unsigned(2 downto 0)          := (others => '0');
-    variable collate : std_logic_vector(13 downto 0) := (others => '0');
+    variable collate : std_logic_vector(15 downto 0) := (others => '0');
   begin  -- process data_collect
     if rising_edge(adc_clk) then
       if clk_en = '1' then
         if switch = '1' then
-          collate := std_logic_vector(shift_right(signed(v_in), 3)(6 downto 0) &
-                                      shift_right(signed(v_out), 3)(6 downto 0));
+          collate := v_in(10 downto 3) &
+                     v_out(10 downto 3);
         elsif switch = '0' then
-          data_hold_v <= "0" & std_logic_vector(counter) &
-                         std_logic_vector(shift_right(signed(v_in), 3)(6 downto 0) &
-                                          shift_right(signed(v_out), 3)(6 downto 0)) &
+          data_hold_v <= --"0" &
+                         --std_logic_vector(counter) &
+                         v_in(10 downto 3) &
+                         v_out(10 downto 3) &
                          collate;
         end if;
         counter := counter + 1;

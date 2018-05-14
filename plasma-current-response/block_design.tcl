@@ -103,8 +103,8 @@ connect_bd_net [get_bd_pins current_response_0/T_electron_out_tvalid] [get_bd_pi
 connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins adc_dac/dac1]
 connect_bd_net [get_bd_pins current_response_0/V_curr] [get_bd_pins sts/Current]
 connect_bd_net [get_bd_pins current_response_0/Resistence] [get_bd_pins ctl/Resistence]
-#connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins current_response_0/V_curr]
-connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins adc_dac/adc1]
+connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins current_response_0/V_curr]
+#connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins adc_dac/adc1]
 ##################################### Current Response Module #######################################################
 
 
@@ -119,7 +119,7 @@ connect_bd_net [get_bd_pins Div_to_address_0/divider_int_res] [get_bd_pins Div_i
 ##################################### Divider Module ################################################################
 set_property -dict [list CONFIG.dividend_and_quotient_width.VALUE_SRC USER CONFIG.divisor_width.VALUE_SRC USER] [get_bd_cells div_gen_0]
 set_property -dict [list CONFIG.dividend_and_quotient_width {14} CONFIG.remainder_type {Fractional}]  [get_bd_cells div_gen_0]
-set_property -dict [list CONFIG.divisor_width {14} CONFIG.fractional_width {12} CONFIG.latency {31}] [get_bd_cells div_gen_0]
+set_property -dict [list CONFIG.divisor_width {14} CONFIG.fractional_width {10} CONFIG.latency {31}] [get_bd_cells div_gen_0]
 connect_bd_net [get_bd_pins div_gen_0/aclk] [get_bd_pins adc_dac/adc_clk]
 connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tdata] [get_bd_pins Div_to_address_0/divider_tdata]
 connect_bd_net [get_bd_pins div_gen_0/m_axis_dout_tvalid] [get_bd_pins Div_to_address_0/divider_tvalid]
@@ -182,7 +182,8 @@ connect_bd_net [get_bd_pins Div_int_delay_0/adc_clk] [get_bd_pins adc_dac/adc_cl
 
 ##################################### Man Calibration #####################################################################
 connect_bd_net [get_bd_pins manual_calibration_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins manual_calibration_0/volt_in]
+#connect_bd_net [get_bd_pins ctl/led] [get_bd_pins manual_calibration_0/volt_in] ; # Set number operation
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins manual_calibration_0/volt_in] ; # Normal operation
 connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins current_response_0/Bias_voltage]
 connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins adc_dac/dac2]
 connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins sts/Bias]

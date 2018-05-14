@@ -37,7 +37,9 @@ class PCS
     }
 
     // PCS generator
-
+    void set_led(uint32_t led) {
+        ctl.write<reg::led>(led);
+    }
     void set_trigger() {
       ctl.set_bit<reg::trigger, 0>();
       ctl.clear_bit<reg::trigger, 0>();

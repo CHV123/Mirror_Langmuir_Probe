@@ -101,6 +101,12 @@ create_bd_cell -type ip -vlnv PSFC:user:manual_calibration:1.0 calibrate_PC
 create_bd_cell -type ip -vlnv PSFC:user:data_collector:1.0 data_collector
 create_bd_cell -type ip -vlnv PSFC:user:acquire_trigger:1.0 acquire_trigger
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_trigger
+
+create_bd_cell -type ip -vlnv PSFC:user:output_mux:1.0 output_mux
+create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_mux
+
+create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_PC
+create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_LB
 #############################################################################################################
 # Adding the "Calculate Isat" ip and making the appropriate connections
 connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins iSat_calc/adc_clk]
@@ -232,8 +238,8 @@ connect_bd_net [get_bd_pins set_voltage/vFloat_en] [get_bd_pins vFloat_calc/clk_
 # connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins adc_dac/dac1]
 # connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins adc_dac/dac2]
 
-connect_bd_net [get_bd_pins output_slice/dout] [get_bd_pins adc_dac/dac1]
-connect_bd_net [get_bd_pins output_slice/dout] [get_bd_pins adc_dac/dac2]
+# connect_bd_net [get_bd_pins output_slice/dout] [get_bd_pins adc_dac/dac1]
+# connect_bd_net [get_bd_pins output_slice/dout] [get_bd_pins adc_dac/dac2]
 
 set_property -dict [list CONFIG.DIN_FROM {13} CONFIG.DOUT_WIDTH {14}] [get_bd_cells output_slice]
 connect_bd_net [get_bd_pins output_slice/din] [get_bd_pins ctl/led]
@@ -270,21 +276,36 @@ connect_bd_net [get_bd_pins module_const/dout] [get_bd_pins vFloat_concat/In1]
 ##################################################################################################################
 # Adding the Manual Calibration block for the loopback
 connect_bd_net [get_bd_pins calibrate_LB/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins calibrate_LB/volt_in]
+connect_bd_net [get_bd_pins moving_average_LB/volt_out] [get_bd_pins calibrate_LB/volt_in]
 connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins iSat_calc/volt1]
 connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins Temp_calc/volt2]
 connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins vFloat_calc/volt3]
 connect_bd_net [get_bd_pins ctl/Scale_LB] [get_bd_pins calibrate_LB/scale]
 connect_bd_net [get_bd_pins ctl/Offset_LB] [get_bd_pins calibrate_LB/offset]
+# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins iSat_calc/volt1]
+# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins Temp_calc/volt2]
+# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins vFloat_calc/volt3]
+
 
 # Adding the Manual Calibration block for the Plasma current
 connect_bd_net [get_bd_pins calibrate_PC/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins calibrate_PC/volt_in]
+connect_bd_net [get_bd_pins moving_average_PC/volt_out] [get_bd_pins calibrate_PC/volt_in]
 connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins iSat_calc/volt_in]
 connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins Temp_calc/volt_in]
 connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins vFloat_calc/volt_in]
 connect_bd_net [get_bd_pins ctl/Scale_PC] [get_bd_pins calibrate_PC/scale]
 connect_bd_net [get_bd_pins ctl/Offset_PC] [get_bd_pins calibrate_PC/offset]
+##################################################################################################################
+
+##################################################################################################################
+# adding connections for the moving average cores
+connect_bd_net [get_bd_pins moving_average_LB/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins moving_average_LB/volt_in] [get_bd_pins adc_dac/adc2]
+connect_bd_net [get_bd_pins moving_average_LB/clk_rst] [get_bd_pins acquire_trigger/clear_pulse]
+
+connect_bd_net [get_bd_pins moving_average_PC/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins moving_average_PC/volt_in] [get_bd_pins adc_dac/adc1]
+connect_bd_net [get_bd_pins moving_average_PC/clk_rst] [get_bd_pins acquire_trigger/clear_pulse]
 ##################################################################################################################
 
 ###########################################################################################################
@@ -294,11 +315,11 @@ connect_bd_net [get_bd_pins Temp_calc/Temp] [get_bd_pins data_collector/Temp]
 connect_bd_net [get_bd_pins vFloat_calc/vFloat] [get_bd_pins data_collector/vFloat]
 connect_bd_net [get_bd_pins iSat_calc/iSat] [get_bd_pins data_collector/iSat]
 connect_bd_net [get_bd_pins Temp_calc/data_valid] [get_bd_pins data_collector/Temp_valid]
-connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins data_collector/v_out]
-# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins data_collector/v_out]
-connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins data_collector/v_in]
+connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins data_collector/v_out]
+connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins data_collector/v_in]
 connect_bd_net [get_bd_pins data_collector/tdata] [get_bd_pins adc_clock_converter/s_axis_tdata]
 connect_bd_net [get_bd_pins data_collector/tvalid] [get_bd_pins adc_clock_converter/s_axis_tvalid]
+connect_bd_net [get_bd_pins data_collector/volt_valid] [get_bd_pins set_voltage/store_en]
 set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_pins data_collector/interface_axis]
 set_property CONFIG.CLK_DOMAIN system_pll_0_clk_out1 [get_bd_intf_pins data_collector/interface_axis]
 ###########################################################################################################
@@ -321,6 +342,20 @@ connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins calibrate_
 connect_bd_net [get_bd_pins ctl/Trigger] [get_bd_pins trigger_to_trigger/Din]
 connect_bd_net [get_bd_pins trigger_to_trigger/Dout] [get_bd_pins acquire_trigger/trigger]
 set_property -dict [list CONFIG.DIN_TO {0} CONFIG.DIN_FROM {0} CONFIG.DOUT_WIDTH {1} CONFIG.DIN_WIDTH {32}] [get_bd_cells trigger_to_trigger]
+##################################################################################################################
+
+##################################################################################################################
+# Connecting a multiplexer for constant voltage to assist in calibration
+connect_bd_net [get_bd_pins output_mux/signal_1] [get_bd_pins set_voltage/volt_out]
+connect_bd_net [get_bd_pins output_mux/signal_2] [get_bd_pins output_slice/dout]
+connect_bd_net [get_bd_pins output_mux/adc_clk] [get_bd_pins adc_dac/adc_clk]
+
+set_property -dict [list CONFIG.DIN_TO {1} CONFIG.DIN_FROM {1} CONFIG.DOUT_WIDTH {1}] [get_bd_cells trigger_to_mux]
+connect_bd_net [get_bd_pins output_mux/switch] [get_bd_pins trigger_to_mux/dout]
+connect_bd_net [get_bd_pins ctl/Trigger] [get_bd_pins trigger_to_mux/din]
+
+connect_bd_net [get_bd_pins output_mux/signal_out] [get_bd_pins adc_dac/dac1]
+connect_bd_net [get_bd_pins output_mux/signal_out] [get_bd_pins adc_dac/dac2]
 ##################################################################################################################
 
 # Need slice to connect to LEDs

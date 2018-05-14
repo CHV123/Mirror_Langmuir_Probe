@@ -6,7 +6,7 @@
 -- Author     : Vincent  <charlesv@cmodws122.psfc.mit.edu>
 -- Company    : 
 -- Created    : 2018-04-25
--- Last update: 2018-04-26
+-- Last update: 2018-05-14
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -64,13 +64,11 @@ begin  -- architecture behaviour
   WaveGen_Proc: process
   begin
     -- insert signal assignments here
-    if switch = '0' then
-      volt_in <= std_logic_vector(signed(volt_in) + 3);
-    else
-      volt_in <= std_logic_vector(signed(volt_in) - 2);
-    end if;
-    
-    
+    --if switch = '0' then
+    --  volt_in <= std_logic_vector(signed(volt_in) + 3);
+    --else
+    --  volt_in <= std_logic_vector(signed(volt_in) - 2);
+    --end if;
     wait until Clk = '1';
   end process WaveGen_Proc;
 
@@ -80,10 +78,12 @@ begin  -- architecture behaviour
   -- outputs: switch
   switch_proc: process is
   begin  -- process switch_proc
-    wait for Clk_period * 34;
-    switch <= '1';
     wait for Clk_period * 45;
-    switch <= '0';    
+    volt_in <= std_logic_vector(to_signed(40, 14));
+    wait for Clk_period * 45;
+    volt_in <= std_logic_vector(to_signed(0, 14));
+    wait for Clk_period * 45;
+    volt_in <= std_logic_vector(to_signed(-120, 14));
   end process switch_proc;  
 
 end architecture behaviour;

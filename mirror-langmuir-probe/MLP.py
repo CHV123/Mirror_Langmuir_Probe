@@ -21,6 +21,10 @@ class MLP(object):
     @command()
     def set_trigger(self):
         pass
+
+    @command()
+    def set_output(self):
+        pass
     
     @command()
     def set_led(self, led):

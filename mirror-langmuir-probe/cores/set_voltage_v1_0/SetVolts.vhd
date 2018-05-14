@@ -14,7 +14,7 @@ use ieee.numeric_std.all;
 entity SetVolts is
 
   generic (
-    period     : integer := 38;
+    period     : integer := 40;
     Temp_guess : integer := 100;
     negBias    : integer := -3;
     posBias    : integer := 1
@@ -25,7 +25,8 @@ entity SetVolts is
     period_in  : in std_logic_vector(31 downto 0);
     Temp       : in std_logic_vector(15 downto 0);  -- Temperature sets the voltage bias
     Temp_valid : in std_logic;
-
+    
+    store_en   : out std_logic;
     volt_out  : out std_logic_vector(13 downto 0);
     iSat_en   : out std_logic;
     vFloat_en : out std_logic;
@@ -159,7 +160,7 @@ begin  -- architecture Behavioral
   -- outputs: volt_ready
   en_calc_proc : process (adc_clk) is
   begin  -- process en_calc_proc
-    if counter = period_mask - 3 then
+    if counter = period_mask - 2 then
       case level is
         when 0      => volt_ready <= "01";
         when 1      => volt_ready <= "10";
@@ -168,6 +169,29 @@ begin  -- architecture Behavioral
       end case;
     end if;
   end process en_calc_proc;
+
+  -- purpose: Process to set what points are stored
+  -- type   : sequential
+  -- inputs : adc_clk, counter
+  -- outputs: store_en
+  store_proc : process (adc_clk) is
+  begin  -- process store_proc
+    if rising_edge(adc_clk) then        -- rising clock edge
+      if counter = period_mask - 2 then
+        store_en <= '1';
+      elsif counter = period_mask - 10 then
+        store_en <= '1';
+      elsif counter = period_mask - 18 then
+        store_en <= '1';
+      elsif counter = period_mask - 26 then
+        store_en <= '1';
+      elsif counter = period_mask - 34 then
+        store_en <= '1';
+      else
+        store_en <= '0';
+      end if;
+    end if;
+  end process store_proc;
 
   -- Setting the output to various voltage levels
   set_proc : process(adc_clk)
@@ -184,7 +208,7 @@ begin  -- architecture Behavioral
           outMask := to_signed(0, outMask'length);
         end if;
       end if;
-      output     <= shift_left(outMask(13 downto 0), 3);
+      output     <= shift_left(outMask(13 downto 0), 4);
       level_prev := level;
     end if;
   end process;

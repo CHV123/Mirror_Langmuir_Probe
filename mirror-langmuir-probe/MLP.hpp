@@ -33,8 +33,7 @@ public:
   {
     start_fifo_acquisition();
   }
-    
-  
+      
   //  MLP
   void set_led(uint32_t led) {
     ctl.write<reg::led>(led);
@@ -43,6 +42,15 @@ public:
   void set_trigger() {
     ctl.set_bit<reg::Trigger, 0>();
     ctl.clear_bit<reg::Trigger, 0>();
+  }
+
+  void set_output(uint32_t bit_set) {
+    
+    if (bit_set == 0) {
+      ctl.write<reg::Trigger>(0);
+    } else{
+      ctl.write<reg::Trigger>(2);
+    }
   }
 
   void set_period(uint32_t period) {

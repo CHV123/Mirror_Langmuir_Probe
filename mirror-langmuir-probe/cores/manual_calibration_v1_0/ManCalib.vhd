@@ -6,7 +6,7 @@
 -- Author     : root  <root@cmodws122.psfc.mit.edu>
 -- Company    : 
 -- Created    : 2018-05-03
--- Last update: 2018-05-09
+-- Last update: 2018-05-14
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ architecture behaviour of Calibrate is
   signal offset_proxy : signed(13 downto 0) := to_signed(0, 14);
 
   signal volt_proxy : signed(13 downto 0) := to_signed(0, 14);
-
+  
 begin  -- architecture behaviour
 
   -- purpose: Process to apply the offset to the scaled input voltage
@@ -72,7 +72,7 @@ begin  -- architecture behaviour
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_proxy <= (others => '0');
       else
-        volt_proxy <= signed(volt_in) + offset_proxy;        
+        volt_proxy <= shift_right(signed(volt_in), 4) + offset_proxy;        
       end if;
     end if;
   end process scale_proc;

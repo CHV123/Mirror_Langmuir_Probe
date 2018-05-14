@@ -20,6 +20,7 @@ entity CurrentResponse is
     Expo_result_tvalid : in std_logic;
     Bias_voltage : in std_logic_vector(13 downto 0);
     Resistence : in std_logic_vector(13 downto 0);
+    Cap_Bias : in std_logic_vector(13 downto 0);
 
 
     V_LP : out std_logic_vector(13 downto 0);
@@ -27,7 +28,8 @@ entity CurrentResponse is
     T_electron_out : out std_logic_vector(13 downto 0);
     T_electron_out_tvalid : out std_logic;
     V_curr : out std_logic_vector(13 downto 0);
-    Curr : out std_logic_vector(13 downto 0)
+    Cap_charge : out std_logic_vector(13 downto 0);
+    Curr_out : out std_logic_vector(13 downto 0)
     );
 
 end entity CurrentResponse;
@@ -41,14 +43,14 @@ architecture Behavioral of CurrentResponse is
   signal Expo_int_result_pass_2 : std_logic_vector(13 downto 0) := (others => '0');
   signal Expo_int_result_pass_3 : std_logic_vector(13 downto 0) := (others => '0');
 
+  signal Curr : signed(13 downto 0) := (others => '0');
+
 begin  -- architecture Behavioral
 T_electron_out_tvalid <= '1';
 V_LP_tvalid <= '1';
 
 
 	Pass_through : process(adc_clk)
-	variable clock_timer : integer := 0; 
-    variable V_LP_mask : std_logic_vector(13 downto 0) := (others => '0');
 	begin
 		if (rising_edge(adc_clk)) then
 			-- Passing electron temerature through to the Div block 
@@ -57,7 +59,7 @@ V_LP_tvalid <= '1';
 			-- Calculate the diffrence in voltages
 
 
-            V_LP <= std_logic_vector(shift_right(signed(Bias_voltage), 4) - signed(V_floating));
+            V_LP <= std_logic_vector(shift_right(signed(Bias_voltage), 3) - signed(V_floating));
 			--V_LP_mask := std_logic_vector(signed(Bias_voltage) - signed(V_floating));
            -- V_LP <= V_LP_mask(13 downto 13) & "00" & V_LP_mask(12 downto 0);
 		end if;
@@ -69,7 +71,7 @@ V_LP_tvalid <= '1';
     first_mltp : process(adc_clk)     
     begin
        	if (rising_edge(adc_clk)) then
-    		V_curr_mask_hold_1 <= to_integer(signed(Expo_result)) * 16;
+    		V_curr_mask_hold_1 <= to_integer(signed(Expo_result)) * 8;
             Expo_int_result_pass_1 <= Expo_int_result;
     	end if; 
     end process;
@@ -110,27 +112,35 @@ V_LP_tvalid <= '1';
     end process;
 
 
---    Current_mltp : process(adc_clk)     
---    variable Curr_mask : integer := 0;
---    begin
---        if (rising_edge(adc_clk)) then
---            Curr_mask := to_integer(signed(I_sat))*(to_integer(signed(Expo_result)));
---            case to_integer(signed(Expo_int_result))  is
---                when 7 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 1)(13 downto 0));
---                when 6 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 2)(13 downto 0));
---                when 5 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 4)(13 downto 0));
---                when 4 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 5)(13 downto 0));
---                when 3 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 7)(13 downto 0));
---                when 2 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 8)(13 downto 0));
---                when 1 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 10)(13 downto 0));
---                when 0 => Curr <=   std_logic_vector(shift_right(to_signed(Curr_mask,42), 12)(13 downto 0));
---                when others => Curr <=  std_logic_vector(shift_right(to_signed(Curr_mask,42), 13)(13 downto 0));
---            end case;
---        end if; 
---    end process;
+    Current_mltp : process(adc_clk)     
+
+    begin
+        if (rising_edge(adc_clk)) then
+            
+            case to_integer(signed(Expo_int_result))  is
+                when 7 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 1)(13 downto 0);
+                when 6 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 2)(13 downto 0);
+                when 5 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 4)(13 downto 0);
+                when 4 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 5)(13 downto 0);
+                when 3 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 7)(13 downto 0);
+                when 2 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 8)(13 downto 0);
+                when 1 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 10)(13 downto 0);
+                when 0 => Curr <=   shift_right(to_signed(V_curr_mask_hold_2,42), 12)(13 downto 0);
+                when others => Curr <=  shift_right(to_signed(V_curr_mask_hold_2,42), 13)(13 downto 0);
+            end case;
+            Curr_out <= std_logic_vector(Curr);
+        end if; 
+    end process;
 
 
-
+    Current_mltp_two : process(adc_clk)
+  	variable Charge_mask : signed(13 downto 0) := (others => '0');
+    begin
+        if (rising_edge(adc_clk)) then
+           Charge_mask := Charge_mask + shift_left(Curr,3);
+           Cap_charge <= std_logic_vector(Charge_mask);
+        end if; 
+    end process;
 
 
 

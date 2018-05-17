@@ -11,12 +11,17 @@ def lutFunction(x):
     ln = np.log(x + 1)
     func = 1/(ln)
     if x >= -1 and x < 0:
-        func = func*(2**2)
+        func = func*(2**9)
     elif x > 0 and x <= 1:
-        func = func*(2**0)
+        func = func*(2**9)
     elif x > 1 and x <=7:
         func = func*(2**13)
 
+    if func > 16383:
+        func = 16383
+    elif func < -16384:
+        func = -16384
+        
     return int(round(func))
 
 for i in range(len(xVal)):
@@ -24,11 +29,11 @@ for i in range(len(xVal)):
 
 #dataArray = np.array(dataArray)
 
-plt.plot(xVal, dataArray)
-plt.show()
+# plt.plot(dataArray, '.')
+# plt.show()
 
-# with open("Temp_lut.coe", "w") as lut_file:
-#     lut_file.write("memory_initialization_radix=10;\n")
-#     lut_file.write("memory_initialization_vector=")
-#     for val in dataArray:
-#         lut_file.write("%i " % val) 
+with open("Temp_lut.coe", "w") as lut_file:
+    lut_file.write("memory_initialization_radix=10;\n")
+    lut_file.write("memory_initialization_vector=")
+    for val in dataArray:
+        lut_file.write("%i " % val) 

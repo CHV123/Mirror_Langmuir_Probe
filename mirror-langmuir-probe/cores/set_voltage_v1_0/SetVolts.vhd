@@ -160,7 +160,7 @@ begin  -- architecture Behavioral
   -- outputs: volt_ready
   en_calc_proc : process (adc_clk) is
   begin  -- process en_calc_proc
-    if counter = period_mask - 2 then
+    if counter = period_mask - 5 then
       case level is
         when 0      => volt_ready <= "01";
         when 1      => volt_ready <= "10";
@@ -177,15 +177,15 @@ begin  -- architecture Behavioral
   store_proc : process (adc_clk) is
   begin  -- process store_proc
     if rising_edge(adc_clk) then        -- rising clock edge
-      if counter = period_mask - 2 then
+      if counter = period_mask - 5 then
         store_en <= '1';
-      elsif counter = period_mask - 10 then
+      elsif counter = period_mask - 13 then
         store_en <= '1';
-      elsif counter = period_mask - 18 then
+      elsif counter = period_mask - 21 then
         store_en <= '1';
-      elsif counter = period_mask - 26 then
+      elsif counter = period_mask - 29 then
         store_en <= '1';
-      elsif counter = period_mask - 34 then
+      elsif counter = period_mask - 37 then
         store_en <= '1';
       else
         store_en <= '0';

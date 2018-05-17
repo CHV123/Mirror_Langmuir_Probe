@@ -99,11 +99,11 @@ begin  -- architecture Behavioral
     if rising_edge(adc_clk) then
       if exp_en = '1' then
         if calc_switch = "01" then
-          Temp_mask <= shift_right(difference_hold * signed(BRAMret), 1);
+          Temp_mask <= shift_right(difference_hold * signed(BRAMret), 9);
         elsif calc_switch = "10" then
           Temp_mask <= shift_right(to_signed(to_integer(difference_hold) * to_integer(unsigned(BRAMret)), 32), 13);
         elsif calc_switch = "00" then
-          Temp_mask <= difference_hold * signed(BRAMret);
+          Temp_mask <= shift_right(difference_hold * signed(BRAMret), 9);
         end if;
         output_trigger <= '1';
       else
@@ -148,8 +148,6 @@ begin  -- architecture Behavioral
         storeSig        <= shift_right(signed(volt2), 2);
         storeSig2       <= signed(vFloat);
       else
-        -- making them zero otherwise, though strictly this should not be
-        -- necessary as we're sending a tvalid signal
         dividend_tvalid <= '0';
         divisor_tvalid  <= '0';
       end if;

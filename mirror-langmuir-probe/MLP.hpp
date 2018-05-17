@@ -123,22 +123,22 @@ public:
   void start_fifo_acquisition();
 
    // Function to return the buffer length
-  uint32_t get_buffer_length() {
+  uint32_t get_buffer_length() {      
     return collected;
   }
   
   // Function to return data
   std::vector<uint32_t>& get_MLP_data() {
-    collected = 0;
-    //ctx.log<INFO>("Found Data");
-    ctx.log<INFO>("adc_data size: %d", adc_data.size());
-    //ctx.log<INFO>("collected cleared: %d", collected);
-    
-    dataAvailable = false;
-    
-    ctx.log<INFO>("Data is available: %s", dataAvailable ? "true" : "false");
+
+    // Will only return a valid array if data is available
+    if (dataAvailable) {      
+      dataAvailable = false;
 		  
-    return adc_data;
+      return adc_data;
+      
+    } else {
+      return empty_vector;
+    }
   }
   
   
@@ -149,7 +149,7 @@ private:
   Memory<mem::adc_fifo>& adc_fifo_map;
 
   std::vector<uint32_t> adc_data;
-  //std::vector<uint32_t> empty_vector;
+  std::vector<uint32_t> empty_vector;
   
   std::atomic<bool> fifo_acquisition_started{false};
   
@@ -175,7 +175,7 @@ inline void MLP::fifo_acquisition_thread() {
   ctx.log<INFO>("Starting fifo acquisition");
   adc_data.reserve(16777216);
   adc_data.resize(0);
-  //empty_vector.resize(0);
+  empty_vector.resize(0);
   
   uint32_t dropped=0;
   
@@ -209,13 +209,16 @@ inline void MLP::fifo_acquisition_thread() {
 inline uint32_t MLP::fill_buffer(uint32_t dropped) {
     // Retrieving the number of samples to collect
   uint32_t samples=get_fifo_length();
-  //ctx.log<INFO>("Samples: %d", samples); 
+ 
   // Checking for dropped samples
-  if (samples >= 32768){  	
-    dropped += 1;
-  }
+  
   // Collecting samples in buffer
   if (samples > 0) {
+    // Checking for dropped samples
+    if (samples >= 32768){  	
+      dropped += 1;
+    }
+    // Assigning data to array
     for (size_t i=0; i < samples; i++){	  
       adc_data.push_back(read_fifo());	  
       collected = collected + 1;
@@ -225,7 +228,7 @@ inline uint32_t MLP::fill_buffer(uint32_t dropped) {
   if (samples == 0) {
     if (collected > 0) {
       dataAvailable = true;
-      //collected = 0;
+      collected = 0;
       dropped = 0;
     }
   }

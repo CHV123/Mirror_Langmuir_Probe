@@ -6,7 +6,7 @@
 -- Author     : Vincent  <charlesv@cmodws122.psfc.mit.edu>
 -- Company    : 
 -- Created    : 2018-04-25
--- Last update: 2018-05-14
+-- Last update: 2018-05-15
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -46,6 +46,11 @@ architecture behaviour of MoveAve_tb is
   -- Simulation signals
   signal switch : std_logic := '0';
 
+  type waveform is array (29 downto 0) of integer range -512 to 511;
+  signal wave : waveform := (100,101,99,103,98,96,100,104,97,101,
+                             -2,1,0,0,3,-2,-3,1,0,3,
+                             -304,-305,-299,-300,-302,-303,-296,-297,-300,-301);
+
 begin  -- architecture behaviour
 
   -- component instantiation
@@ -77,13 +82,14 @@ begin  -- architecture behaviour
   -- inputs : 
   -- outputs: switch
   switch_proc: process is
+    variable counter : integer range 0 to 29 := 0;
   begin  -- process switch_proc
-    wait for Clk_period * 45;
-    volt_in <= std_logic_vector(to_signed(40, 14));
-    wait for Clk_period * 45;
-    volt_in <= std_logic_vector(to_signed(0, 14));
-    wait for Clk_period * 45;
-    volt_in <= std_logic_vector(to_signed(-120, 14));
+    wait for Clk_period*2;
+    volt_in <= std_logic_vector(to_signed(wave(counter), 14));    
+    counter := counter + 1;
+    if counter = 30 then
+      counter := 0;
+    end if;
   end process switch_proc;  
 
 end architecture behaviour;

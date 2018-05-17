@@ -6,7 +6,7 @@
 -- Author     : root  <root@cmodws122.psfc.mit.edu>
 -- Company    : 
 -- Created    : 2018-05-03
--- Last update: 2018-05-14
+-- Last update: 2018-05-15
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ begin  -- architecture behaviour
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_out <= (others => '0');
       else
-        volt_out <= std_logic_vector(shift_right(scale_proxy * volt_proxy, 10)(13 downto 0));
+        volt_out <= std_logic_vector(shift_right(scale_proxy * volt_proxy, 10)(13 downto 5)) & "00000";
       end if;
     end if;
   end process offset_proc;
@@ -72,7 +72,7 @@ begin  -- architecture behaviour
       if clk_rst = '1' then             -- synchronous reset (active high)
         volt_proxy <= (others => '0');
       else
-        volt_proxy <= shift_right(signed(volt_in), 4) + offset_proxy;        
+        volt_proxy <= signed(volt_in) + offset_proxy;        
       end if;
     end if;
   end process scale_proc;

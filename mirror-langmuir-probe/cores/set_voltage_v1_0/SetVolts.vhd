@@ -41,7 +41,7 @@ architecture Behavioral of SetVolts is
   signal output      : signed(13 downto 0)          := to_signed(Temp_guess*negBias, 14);  -- mask for the output voltage
   signal counter     : integer                      := 0;  -- counter for setting the voltage levels
   signal level       : integer range 0 to 2         := 0;  -- counter for registering the voltage levels
-  signal TempMask    : signed(15 downto 0)          := to_signed(Temp_guess, 16);
+  signal TempMask    : unsigned(15 downto 0)        := to_unsigned(Temp_guess, 16);
   signal volt_ready  : std_logic_vector(1 downto 0) := (others => '0');
   signal volt1_proxy : signed(20 downto 0)          := to_signed(Temp_guess*negBias, 21);
   signal volt2_proxy : signed(19 downto 0)          := to_signed(Temp_guess*posBias, 20);
@@ -69,16 +69,16 @@ begin  -- architecture Behavioral
   -- inputs : adc_clk
   -- outputs: TempMask
   temp_check_proc : process (adc_clk) is
-    variable TempMask_proxy : signed(15 downto 0) := to_signed(Temp_guess, 16);
+    variable TempMask_proxy : unsigned(15 downto 0) := to_unsigned(Temp_guess, 16);
   begin  -- process temp_check_proc
     if rising_edge(adc_clk) then
       if Temp_valid = '1' then
         if signed(Temp) > to_signed(0, Temp'length) then
-          TempMask       <= signed(Temp);
-          TempMask_proxy := signed(Temp);
+          TempMask       <= unsigned(Temp);
+          TempMask_proxy := unsigned(Temp);
         else
-          TempMask       <= to_signed(Temp_guess, TempMask'length);
-          TempMask_proxy := to_signed(Temp_guess, TempMask'length);
+          TempMask       <= to_unsigned(Temp_guess, TempMask'length);
+          TempMask_proxy := to_unsigned(Temp_guess, TempMask'length);
         end if;
         volt1_proxy <= to_signed(negBias * to_integer(TempMask_proxy), 21);
         volt2_proxy <= to_signed(posBias * to_integer(TempMask_proxy), 20);
@@ -148,7 +148,7 @@ begin  -- architecture Behavioral
           counter <= 0;
         end if;  -- end of counter decision
       end if;
-      if clk_rst = '1' then
+      if clk_rst = '1' then  		-- if this reset changes then tell Will
         level <= 0;
       end if;
     end if;  -- end of rising edge
@@ -208,7 +208,8 @@ begin  -- architecture Behavioral
           outMask := to_signed(0, outMask'length);
         end if;
       end if;
-      output     <= shift_left(outMask(13 downto 0), 4);
+      output     <= shift_left(outMask(13 downto 0), 2);
+      --output     <= outMask(13 downto 0);  
       level_prev := level;
     end if;
   end process;

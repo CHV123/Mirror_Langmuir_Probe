@@ -13,7 +13,7 @@ use ieee.numeric_std.all;
 
 entity DataCollect is
   port (
-    adc_clk    : in std_logic;		-- adc input clock
+    adc_clk    : in std_logic;          -- adc input clock
     volt_valid : in std_logic;
     Temp_valid : in std_logic;
     Temp       : in std_logic_vector(15 downto 0);
@@ -30,28 +30,16 @@ entity DataCollect is
 end entity DataCollect;
 
 architecture Behavioral of DataCollect is
-  signal switch	     : std_logic		     := '0';
   signal data_hold_v : std_logic_vector(31 downto 0) := (others => '0');
   signal data_hold_t : std_logic_vector(31 downto 0) := (others => '0');
-  signal temp_set    : std_logic		     := '0';
-  signal delivered   : std_logic		     := '0';
-  signal volt_stored : std_logic		     := '0';
+  
+  signal delivered_v : std_logic                     := '0';
+  signal delivered_t : std_logic                     := '0';
+  
+  signal volt_stored : std_logic                     := '0';
+  signal temp_stored : std_logic                     := '0';
+  
 begin  -- architecture Behavioral
-
-  -- purpose: Process to generate the data switch signal from the data cycles integer and the adc_clk
-  -- type   : combinational
-  -- inputs : adc_clk
-  -- outputs: data_valid
-  switch_proc : process (adc_clk) is
-  begin	 -- process data_switch_proc
-    if rising_edge(adc_clk) then
-      if switch = '0' then
-	switch <= '1';
-      elsif switch = '1' then
-	switch <= '0';
-      end if;
-    end if;
-  end process switch_proc;
 
   -- purpose: Process to collect voltage values
   -- type   : combinational
@@ -59,87 +47,86 @@ begin  -- architecture Behavioral
   -- outputs: data
   volt_collect : process (adc_clk) is
     variable counter : unsigned(2 downto 0) := (others => '0');
-  begin	 -- process data_collect
+  begin  -- process data_collect
     if rising_edge(adc_clk) then
       if clk_en = '1' then
-	if volt_valid = '1' then
-	  volt_stored <= '1';
-	  data_hold_v <= "0" &
-			 std_logic_vector(counter) &
-			 v_in(13 downto 0) &
-			 v_out(13 downto 0);
-	  counter := counter + 1;
-	else
-          if delivered = '1' then
+        if volt_valid = '1' then
+          volt_stored <= '1';
+          data_hold_v <= "0" &
+                         std_logic_vector(counter) &
+                         v_in(13 downto 0) &
+                         v_out(13 downto 0);
+          counter := counter + 1;
+        else
+          if delivered_v = '1' then
             volt_stored <= '0';
-          end if;	  
-	end if;
+          end if;
+        end if;
       else
-	counter := (others => '0');
+        counter := (others => '0');
       end if;
     end if;
   end process volt_collect;
 
-  -- purpose: Process to collate the temperature, floating voltage and saturation current values after each temperature is collected
+  -- purpose: Process to collect voltage values
   -- type   : combinational
   -- inputs : adc_clk
-  -- outputs: v_data
-  var_collect : process (adc_clk) is
+  -- outputs: data
+  temp_collect : process (adc_clk) is
     variable counter : unsigned(3 downto 0) := (others => '0');
-  begin	 -- process var_collect
+  begin  -- process data_collect
     if rising_edge(adc_clk) then
       if clk_en = '1' then
-	if Temp_valid = '1' then
-	  data_hold_t <= "1" &
-			 std_logic_vector(counter) &
-			 std_logic_vector(shift_right(signed(Temp), 2)(8 downto 0) &
-					  shift_right(signed(iSat), 2)(8 downto 0) &
-					  shift_right(signed(vFloat), 2)(8 downto 0));
-	  temp_set <= '1';
-	end if;
-	if delivered = '1' and temp_set = '1' then
-	  temp_set <= '0';
-	end if;
-	counter := counter + 1;
+        if Temp_valid = '1' then
+          temp_stored <= '1';
+          data_hold_t <= "1" &
+                         std_logic_vector(counter) &
+                         std_logic_vector(unsigned(Temp(8 downto 0))) &
+                         std_logic_vector(shift_right(signed(iSat), 2)(8 downto 0)) &
+                         std_logic_vector(signed(vFloat(8 downto 0)));
+          counter := counter + 1;
+        else
+          if delivered_t = '1' then
+            temp_stored <= '0';
+          end if;
+        end if;
       else
-	counter := (others => '0');
+        counter := (others => '0');
       end if;
     end if;
-  end process var_collect;
+  end process temp_collect;
 
   -- purpose: Process to set the data to ouput and the correct valid signal 
   -- type   : combinational
   -- inputs : adc_clk
   -- outputs: tdata, tvalid
   data_valid : process (adc_clk) is
-  begin	 -- process data_valid
+  begin  -- process data_valid
     if rising_edge(adc_clk) then
       if clk_en = '1' then
-	case switch is
-	  when '1' =>
-	    if volt_stored = '1' then
-	      tvalid <= '1';
-	      tdata  <= data_hold_v;
-              delivered <= '1';
-	    else
-              delivered <= '0';
-	      tvalid <= '0';
-	    end if;
-	  when '0' =>
-	    if temp_set = '1' then
-	      tvalid	<= '1';
-	      tdata	<= data_hold_t;
-	      delivered <= '1';
-	    else
-	      delivered <= '1';
-	      tvalid	<= '0';
-	    end if;
-	  when others =>
-	    tvalid    <= '0';
-	    delivered <= '0';
-	end case;
+        if temp_stored = '1' then
+          if volt_stored = '1' then
+            tdata <= data_hold_v;
+            delivered_v <= '1';
+            tvalid <= '1';
+          else
+            tdata <= data_hold_t;
+            delivered_t <= '1';
+            tvalid <= '1';
+          end if;
+        else
+          if volt_stored = '1' then
+            tdata <= data_hold_v;
+            delivered_v <= '1';
+            tvalid <= '1';
+          else
+            tvalid <= '0';
+            delivered_v <= '0';
+            delivered_t <= '0';
+          end if;
+        end if;
       else
-	tvalid <= '0';
+        tvalid <= '0';
       end if;
     end if;
   end process data_valid;

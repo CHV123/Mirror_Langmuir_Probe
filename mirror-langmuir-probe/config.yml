@@ -56,6 +56,7 @@ parameters:
 xdc:
   - boards/red-pitaya/config/ports.xdc
   - boards/red-pitaya/config/clocks.xdc
+  - instruments/mirror-langmuir-probe/expansion_connector.xdc
 
 drivers:
   - ./MLP.hpp

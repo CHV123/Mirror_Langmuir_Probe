@@ -97,6 +97,15 @@ begin  -- architecture behaviour
     volt_valid <= '1';
     wait for adc_clk_period;
     volt_valid <= '0';
+    wait for adc_clk_period*8;
+    volt_valid <= '1';
+    wait for adc_clk_period;
+    volt_valid <= '0';
+    wait for adc_clk_period*8;
+    volt_valid <= '1';
+    wait for adc_clk_period;
+    volt_valid <= '0';
+    wait for adc_clk_period*80;
   end process volt_proc;
 
   -- purpose: Proces to produce variable data for the collector

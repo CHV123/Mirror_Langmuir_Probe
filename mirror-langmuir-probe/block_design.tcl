@@ -74,7 +74,9 @@ set_property offset [get_memory_offset adc_fifo] $memory_segment
 set_property range  [get_memory_range adc_fifo]  $memory_segment
 
 ####################################################################################################
-# Instantiating  all the needed blocks
+# Instantiating  all the needed blocks and ports
+create_bd_port -dir I Ext_trigger
+
 create_bd_cell -type ip -vlnv PSFC:user:isat_calc:1.0 iSat_calc
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 iSat_concat
 create_bd_cell -type ip -vlnv xilinx.com:ip:div_gen:5.1 iSat_div
@@ -105,8 +107,10 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_trigger
 create_bd_cell -type ip -vlnv PSFC:user:output_mux:1.0 output_mux
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_mux
 
-create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_PC
-create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_LB
+create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 trigger_OR
+
+# create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_PC
+# create_bd_cell -type ip -vlnv PSFC:user:moving_average:1.0 moving_average_LB
 #############################################################################################################
 # Adding the "Calculate Isat" ip and making the appropriate connections
 connect_bd_net [get_bd_pins adc_dac/adc_clk] [get_bd_pins iSat_calc/adc_clk]
@@ -276,7 +280,8 @@ connect_bd_net [get_bd_pins module_const/dout] [get_bd_pins vFloat_concat/In1]
 ##################################################################################################################
 # Adding the Manual Calibration block for the loopback
 connect_bd_net [get_bd_pins calibrate_LB/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins moving_average_LB/volt_out] [get_bd_pins calibrate_LB/volt_in]
+# connect_bd_net [get_bd_pins moving_average_LB/volt_out] [get_bd_pins calibrate_LB/volt_in];
+connect_bd_net [get_bd_pins adc_dac/adc2] [get_bd_pins calibrate_LB/volt_in]
 connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins iSat_calc/volt1]
 connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins Temp_calc/volt2]
 connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins vFloat_calc/volt3]
@@ -289,7 +294,8 @@ connect_bd_net [get_bd_pins ctl/Offset_LB] [get_bd_pins calibrate_LB/offset]
 
 # Adding the Manual Calibration block for the Plasma current
 connect_bd_net [get_bd_pins calibrate_PC/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins moving_average_PC/volt_out] [get_bd_pins calibrate_PC/volt_in]
+# connect_bd_net [get_bd_pins moving_average_PC/volt_out] [get_bd_pins calibrate_PC/volt_in]
+connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins calibrate_PC/volt_in]
 connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins iSat_calc/volt_in]
 connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins Temp_calc/volt_in]
 connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins vFloat_calc/volt_in]
@@ -299,13 +305,13 @@ connect_bd_net [get_bd_pins ctl/Offset_PC] [get_bd_pins calibrate_PC/offset]
 
 ##################################################################################################################
 # adding connections for the moving average cores
-connect_bd_net [get_bd_pins moving_average_LB/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins moving_average_LB/volt_in] [get_bd_pins adc_dac/adc2]
-connect_bd_net [get_bd_pins moving_average_LB/clk_rst] [get_bd_pins acquire_trigger/clear_pulse]
+# connect_bd_net [get_bd_pins moving_average_LB/adc_clk] [get_bd_pins adc_dac/adc_clk]
+# connect_bd_net [get_bd_pins moving_average_LB/volt_in] [get_bd_pins adc_dac/adc2]
+# connect_bd_net [get_bd_pins moving_average_LB/clk_rst] [get_bd_pins acquire_trigger/clear_pulse]
 
-connect_bd_net [get_bd_pins moving_average_PC/adc_clk] [get_bd_pins adc_dac/adc_clk]
-connect_bd_net [get_bd_pins moving_average_PC/volt_in] [get_bd_pins adc_dac/adc1]
-connect_bd_net [get_bd_pins moving_average_PC/clk_rst] [get_bd_pins acquire_trigger/clear_pulse]
+# connect_bd_net [get_bd_pins moving_average_PC/adc_clk] [get_bd_pins adc_dac/adc_clk]
+# connect_bd_net [get_bd_pins moving_average_PC/volt_in] [get_bd_pins adc_dac/adc1]
+# connect_bd_net [get_bd_pins moving_average_PC/clk_rst] [get_bd_pins acquire_trigger/clear_pulse]
 ##################################################################################################################
 
 ###########################################################################################################
@@ -337,11 +343,15 @@ connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins set_voltag
 connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins calibrate_LB/clk_rst]
 connect_bd_net [get_bd_pins acquire_trigger/clear_pulse] [get_bd_pins calibrate_PC/clk_rst]
 
-# Taking a bit from the trigger to implement the acquisition trigger
+# Taking a bit from the trigger to implement the acquisition trigger and OR gate with the external trigger
 
+set_property -dict [list CONFIG.C_SIZE {1} CONFIG.C_OPERATION {or}] [get_bd_cells trigger_OR]
+set_property -dict [list CONFIG.DIN_TO {0} CONFIG.DIN_FROM {0} CONFIG.DIN_WIDTH {32}] [get_bd_cells trigger_to_trigger]
+
+connect_bd_net [get_bd_ports Ext_trigger] [get_bd_pins trigger_OR/Op1]
 connect_bd_net [get_bd_pins ctl/Trigger] [get_bd_pins trigger_to_trigger/Din]
-connect_bd_net [get_bd_pins trigger_to_trigger/Dout] [get_bd_pins acquire_trigger/trigger]
-set_property -dict [list CONFIG.DIN_TO {0} CONFIG.DIN_FROM {0} CONFIG.DOUT_WIDTH {1} CONFIG.DIN_WIDTH {32}] [get_bd_cells trigger_to_trigger]
+connect_bd_net [get_bd_pins trigger_to_trigger/Dout] [get_bd_pins trigger_OR/Op2]
+connect_bd_net [get_bd_pins trigger_OR/Res] [get_bd_pins acquire_trigger/trigger]
 ##################################################################################################################
 
 ##################################################################################################################

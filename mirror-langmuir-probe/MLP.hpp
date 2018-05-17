@@ -129,7 +129,7 @@ public:
   
   // Function to return data
   std::vector<uint32_t>& get_MLP_data() {
-    
+    collected = 0;
     //ctx.log<INFO>("Found Data");
     ctx.log<INFO>("adc_data size: %d", adc_data.size());
     //ctx.log<INFO>("collected cleared: %d", collected);
@@ -225,7 +225,7 @@ inline uint32_t MLP::fill_buffer(uint32_t dropped) {
   if (samples == 0) {
     if (collected > 0) {
       dataAvailable = true;
-      collected = 0;
+      //collected = 0;
       dropped = 0;
     }
   }

@@ -135,7 +135,7 @@ begin  -- architecture Behavioral
     if rising_edge(adc_clk) then
       if clk_en = '1' then
         -- Setting the variables to go into the division
-        divisor_mask := to_signed(to_integer(signed(iSat)), 14);
+        divisor_mask := signed(iSat(13 downto 0));
         if divisor_mask /= to_signed(0, 14) then
           divisor_tdata <= "00" & std_logic_vector(divisor_mask);
         else
@@ -167,8 +167,8 @@ begin  -- architecture Behavioral
       if index = '1' then
         -- Extracting the integer part and the fractional part returned by the
         -- divider core to use in the bram address mapping
-        divider_rem := to_integer(signed(divider_tdata(11 downto 0)));
-        divider_int := to_integer(signed(divider_tdata(25 downto 12)));
+        divider_rem := to_integer(signed(divider_tdata(10 downto 0)));
+        divider_int := to_integer(signed(divider_tdata(24 downto 11)));
         int_store   <= divider_int;
         rem_store   <= divider_rem;
         case divider_int is

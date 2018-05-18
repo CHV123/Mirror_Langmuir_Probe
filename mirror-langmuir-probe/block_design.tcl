@@ -172,7 +172,7 @@ set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.use_bram_blo
 set_property -dict [list CONFIG.Write_Width_A {16} CONFIG.Write_Depth_A {16384} CONFIG.Read_Width_A {16}] [get_bd_cells vFloat_SPR]
 set_property -dict [list CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled}] [get_bd_cells vFloat_SPR]
 set_property -dict [list CONFIG.Register_PortA_Output_of_Memory_Primitives {true}] [get_bd_cells vFloat_SPR]
-set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/cores/vfloat_calc_v1_0/ln_lut.coe}] [get_bd_cells vFloat_SPR]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/cores/vfloat_calc_v1_0/vFloat_lut.coe}] [get_bd_cells vFloat_SPR]
 set_property -dict [list CONFIG.Fill_Remaining_Memory_Locations {true} CONFIG.Use_RSTA_Pin {false}] [get_bd_cells vFloat_SPR]
 
 # Connect up the block to vFloat
@@ -207,7 +207,7 @@ set_property -dict [list CONFIG.Enable_32bit_Address {false} CONFIG.use_bram_blo
 set_property -dict [list CONFIG.Write_Width_A {16} CONFIG.Write_Depth_A {16384} CONFIG.Read_Width_A {16}] [get_bd_cells Temp_SPR]
 set_property -dict [list CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled}] [get_bd_cells Temp_SPR]
 set_property -dict [list CONFIG.Register_PortA_Output_of_Memory_Primitives {true}] [get_bd_cells Temp_SPR]
-set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/cores/temp_calc_v1_0/oneLn_lut.coe}] [get_bd_cells Temp_SPR]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/mirror-langmuir-probe/cores/temp_calc_v1_0/Temp_lut.coe}] [get_bd_cells Temp_SPR]
 set_property -dict [list CONFIG.Fill_Remaining_Memory_Locations {true} CONFIG.Use_RSTA_Pin {false}] [get_bd_cells Temp_SPR]
 
 # Connect up the block to Temp
@@ -321,6 +321,9 @@ connect_bd_net [get_bd_pins Temp_calc/Temp] [get_bd_pins data_collector/Temp]
 connect_bd_net [get_bd_pins vFloat_calc/vFloat] [get_bd_pins data_collector/vFloat]
 connect_bd_net [get_bd_pins iSat_calc/iSat] [get_bd_pins data_collector/iSat]
 connect_bd_net [get_bd_pins Temp_calc/data_valid] [get_bd_pins data_collector/Temp_valid]
+# connect_bd_net [get_bd_pins Temp_SPR/douta] [get_bd_pins data_collector/vFloat]
+# connect_bd_net [get_bd_pins Temp_calc/BRAM_addr] [get_bd_pins data_collector/iSat]
+# connect_bd_net [get_bd_pins set_voltage/Temp_en] [get_bd_pins data_collector/Temp_valid]
 connect_bd_net [get_bd_pins calibrate_LB/volt_out] [get_bd_pins data_collector/v_out]
 connect_bd_net [get_bd_pins calibrate_PC/volt_out] [get_bd_pins data_collector/v_in]
 connect_bd_net [get_bd_pins data_collector/tdata] [get_bd_pins adc_clock_converter/s_axis_tdata]

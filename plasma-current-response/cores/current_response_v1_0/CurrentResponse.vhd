@@ -97,13 +97,13 @@ V_LP_tvalid <= '1';
         if (rising_edge(adc_clk)) then
             case to_integer(signed(Expo_int_result_pass_3))  is
                 when 7 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 1)(13 downto 0));
-                when 6 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 2)(13 downto 0));
-                when 5 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 4)(13 downto 0));
-                when 4 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 5)(13 downto 0));
-                when 3 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 7)(13 downto 0));
-                when 2 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 8)(13 downto 0));
-                when 1 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 10)(13 downto 0));
-                when 0 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 12)(13 downto 0));
+                when 6 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 1)(13 downto 0));
+                when 5 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 1)(13 downto 0));
+                when 4 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 1)(13 downto 0));
+                when 3 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 6)(13 downto 0));
+                when 2 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 6)(13 downto 0));
+                when 1 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 6)(13 downto 0));
+                when 0 => V_curr <=   std_logic_vector(shift_right(to_signed(V_curr_mask,42), 6)(13 downto 0));
                 when others => V_curr <=  std_logic_vector(shift_right(to_signed(V_curr_mask,42), 13)(13 downto 0));
             end case;
         end if; 

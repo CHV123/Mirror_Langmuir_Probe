@@ -75,7 +75,7 @@ begin  -- architecture Behavioral
       if Temp_valid = '1' then
         if signed(Temp) > to_signed(0, Temp'length) then
           TempMask       <= unsigned(Temp);
-          TempMask_proxy := unsigned(Temp);
+          TempMask_proxy := shift_right(shift_left(TempMask_proxy, 5) - TempMask_proxy + unsigned(Temp), 5);
         else
           TempMask       <= to_unsigned(Temp_guess, TempMask'length);
           TempMask_proxy := to_unsigned(Temp_guess, TempMask'length);

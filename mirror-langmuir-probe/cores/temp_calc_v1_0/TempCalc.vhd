@@ -90,7 +90,7 @@ begin  -- architecture Behavioral
     end if;
   end process reset_proc;
 
-  -- purpose: Process to calculate Saturation current
+  -- purpose: Process to calculate Temperature value
   -- type   : combinational
   -- inputs : adc_clk
   -- outputs: saturation current

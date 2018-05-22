@@ -90,7 +90,7 @@ begin  -- architecture Behavioral
     end if;
   end process reset_proc;
 
-  -- purpose: Process to calculate Saturation current
+  -- purpose: Process to calculate Temperature value
   -- type   : combinational
   -- inputs : adc_clk
   -- outputs: saturation current
@@ -167,8 +167,8 @@ begin  -- architecture Behavioral
       if index = '1' then
         -- Extracting the integer part and the fractional part returned by the
         -- divider core to use in the bram address mapping
-        divider_rem := to_integer(signed(divider_tdata(10 downto 0)));
-        divider_int := to_integer(signed(divider_tdata(24 downto 11)));
+        divider_rem := to_integer(signed(divider_tdata(11 downto 0)));
+        divider_int := to_integer(signed(divider_tdata(25 downto 12)));
         int_store   <= divider_int;
         rem_store   <= divider_rem;
         case divider_int is

@@ -65,14 +65,22 @@ port map (
 stm_proc : process
 begin
 	wait for adc_clk_period*100;
-	Isat <= STD_LOGIC_vector(to_signed(2,Isat'length));
+	Isat <= STD_LOGIC_vector(to_signed(-2,Isat'length));
 	Resistence <= STD_LOGIC_vector(to_signed(50,Resistence'length));
 	Temp <= STD_LOGIC_vector(to_signed(100,Temp'length));
-	Vf <= STD_LOGIC_vector(to_signed(0,Vf'length));
+	Vf <= STD_LOGIC_vector(to_signed(0,Vf'length));	
 	
-	Bias <= STD_LOGIC_vector(to_signed(-500,Bias'length));
-
-
 end process;
+
+Temp_proc : process
+begin
+    Bias <= STD_LOGIC_vector(to_signed(0,Bias'length));
+    wait for adc_clk_period*50;
+    Bias <= STD_LOGIC_vector(to_signed(-600,Bias'length));
+    wait for adc_clk_period*50;
+    Bias <= STD_LOGIC_vector(to_signed(200,Bias'length));
+    wait for adc_clk_period*50;
+end process;
+    
 
 end architecture behaviour;

@@ -57,7 +57,7 @@ V_LP_tvalid <= '1';
 			-- Calculate the diffrence in voltages
 
 
-            V_LP <= std_logic_vector(shift_right(signed(Bias_voltage), 2) - signed(V_floating));
+            V_LP <= std_logic_vector(shift_right(signed(Bias_voltage), 1) - signed(V_floating));
 			--V_LP_mask := std_logic_vector(signed(Bias_voltage) - signed(V_floating));
            -- V_LP <= V_LP_mask(13 downto 13) & "00" & V_LP_mask(12 downto 0);
 		end if;
@@ -69,7 +69,7 @@ V_LP_tvalid <= '1';
     first_mltp : process(adc_clk)     
     begin
        	if (rising_edge(adc_clk)) then
-    		V_curr_mask_hold_1 <= to_integer(signed(Expo_result)) * 4;
+    		V_curr_mask_hold_1 <= to_integer(signed(Expo_result)) * 2;
             Expo_int_result_pass_1 <= Expo_int_result;
     	end if; 
     end process;
@@ -128,10 +128,6 @@ V_LP_tvalid <= '1';
 --            end case;
 --        end if; 
 --    end process;
-
-
-
-
 
 
 end architecture Behavioral;

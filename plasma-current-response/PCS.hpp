@@ -40,6 +40,7 @@ class PCS
     void set_led(uint32_t led) {
         ctl.write<reg::led>(led);
     }
+
     void set_trigger() {
       ctl.set_bit<reg::trigger, 0>();
       ctl.clear_bit<reg::trigger, 0>();
@@ -75,6 +76,10 @@ class PCS
 
     void set_Calibration_scale(uint32_t Calibration_scale) {
         ctl.write<reg::Calibration_scale>(Calibration_scale);
+    }
+
+    void set_Downsample(uint32_t Downsample) {
+        ctl.write<reg::Downsample>(Downsample);
     }
 
     uint32_t get_Current() {

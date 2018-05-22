@@ -36,8 +36,8 @@ for i in range(len(xVal)):
 
 #dataArray = np.array(dataArray)
 
-#plt.plot(xVal, dataArray)
-#plt.show()
+plt.plot(xVal, dataArray)
+plt.show()
 
 with open("current_lut.coe", "w") as lut_file:
     lut_file.write("memory_initialization_radix=10;\n")

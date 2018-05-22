@@ -17,6 +17,7 @@ cores:
   - instruments/plasma-current-response/cores/manual_calibration_v1_0
   - instruments/plasma-current-response/cores/data_collector_v1_0
   - instruments/plasma-current-response/cores/acquire_trigger_v1_0
+  - instruments/plasma-current-response/cores/clock_counter_v1_0
 
 memory:
   - name: control
@@ -43,6 +44,7 @@ control_registers:
   - Calibration_scale
   - trigger
   - Time_in
+  - Downsample
 
 status_registers:
   - adc[n_adc]

@@ -58,7 +58,9 @@ class PCS(object):
     def set_Calibration_scale(self, Calibration_scale):
         pass
 
-
+    @command()
+    def set_Downsample(self, Downsample):
+        pass
 
     @command()
     def get_Current(self):

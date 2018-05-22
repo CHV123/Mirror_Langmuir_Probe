@@ -94,6 +94,8 @@ create_bd_cell -type ip -vlnv PSFC:user:acquire_trigger:1.0 acquire_trigger_0
 create_bd_port -dir I Ext_trigger
 create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 trigger_OR
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 trigger_to_trigger
+create_bd_cell -type ip -vlnv PSFC:user:clock_counter:1.0 clock_counter_data
+create_bd_cell -type ip -vlnv PSFC:user:clock_counter:1.0 clock_counter_BRAM
 ################################### All Blocks Made #####################################################
 
 ################################### Connect All the Blocks ##############################################
@@ -109,6 +111,7 @@ connect_bd_net [get_bd_pins current_response_0/Resistence] [get_bd_pins ctl/Resi
 connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins current_response_0/V_curr]
 #connect_bd_net [get_bd_pins data_collector_0/v_out] [get_bd_pins adc_dac/adc1]
 ##################################### Current Response Module #######################################################
+
 
 
 ##################################### Div_to_address ################################################################
@@ -136,7 +139,7 @@ connect_bd_net [get_bd_pins blk_mem_gen_0/douta] [get_bd_pins current_response_0
 ##################################### BRAM Module ###################################################################
 
 ##################################### Profile Sweeper ###############################################################
-connect_bd_net [get_bd_pins Profile_Sweep_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins Profile_Sweep_0/adc_clk] [get_bd_pins clock_counter_BRAM/out_en]
 connect_bd_net [get_bd_pins Profile_Sweep_0/Profile_address] [get_bd_pins blk_mem_gen_ISAT/addra]
 connect_bd_net [get_bd_pins Profile_Sweep_0/Profile_address] [get_bd_pins blk_mem_gen_Temp/addra]
 connect_bd_net [get_bd_pins Profile_Sweep_0/Profile_address] [get_bd_pins blk_mem_gen_Vfloating/addra]
@@ -175,8 +178,15 @@ connect_bd_net [get_bd_pins input_control_0/Isat] [get_bd_pins current_response_
 connect_bd_net [get_bd_pins data_collector_0/Temp] [get_bd_pins input_control_0/T_e]
 connect_bd_net [get_bd_pins data_collector_0/iSat] [get_bd_pins input_control_0/Isat]
 connect_bd_net [get_bd_pins data_collector_0/vFloat] [get_bd_pins input_control_0/V_f]
-
 ##################################### input control block #################################################################
+
+##################################### Clock counter blocks ################################################################
+connect_bd_net [get_bd_pins clock_counter_data/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins clock_counter_data/count] [get_bd_pins ctl/Downsample]
+
+connect_bd_net [get_bd_pins clock_counter_BRAM/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins clock_counter_BRAM/count] [get_bd_pins ctl/led]
+##################################### Clock counter blocks ################################################################
 
 ##################################### int delay block #####################################################################
 connect_bd_net [get_bd_pins Div_int_delay_0/Int_out] [get_bd_pins current_response_0/Expo_int_result]
@@ -199,6 +209,7 @@ connect_bd_net [get_bd_pins data_collector_0/v_in] [get_bd_pins manual_calibrati
 connect_bd_net [get_bd_pins data_collector_0/adc_clk] [get_bd_pins adc_dac/adc_clk]
 connect_bd_net [get_bd_pins data_collector_0/tdata] [get_bd_pins adc_clock_converter/s_axis_tdata]
 connect_bd_net [get_bd_pins data_collector_0/tvalid] [get_bd_pins adc_clock_converter/s_axis_tvalid]
+connect_bd_net [get_bd_pins data_collector_0/volt_valid] [get_bd_pins clock_counter_data/out_en]
 ##################################### Data Collector ######################################################################
 
 ##################################### Acquisition Trigger #################################################################
@@ -214,6 +225,8 @@ connect_bd_net [get_bd_pins acquire_trigger_0/trigger] [get_bd_pins trigger_OR/R
 connect_bd_net [get_bd_pins ctl/Time_in] [get_bd_pins acquire_trigger_0/AcqTime]
 connect_bd_net [get_bd_pins acquire_trigger_0/timestamp] [get_bd_pins sts/Time_out]
 ##################################### Acquisition Trigger #################################################################
+
+
 
 
 ##################################### Connected all the Blocks ######################################################

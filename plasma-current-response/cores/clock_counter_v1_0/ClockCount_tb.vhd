@@ -63,7 +63,7 @@ begin  -- architecture behaviour
   stim_proc : process
   begin
     wait for adc_clk_period*200;
-    count <= std_logic_vector(to_unsigned(1, 32));
+    count <= std_logic_vector(to_unsigned(0, 32));
     wait for adc_clk_period*200;
     count <= std_logic_vector(to_unsigned(10, 32));
 

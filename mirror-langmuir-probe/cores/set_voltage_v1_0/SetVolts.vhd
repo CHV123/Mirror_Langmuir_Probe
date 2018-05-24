@@ -208,7 +208,7 @@ begin  -- architecture Behavioral
           outMask := to_signed(0, outMask'length);
         end if;
       end if;
-      output     <= shift_left(outMask(13 downto 0), 1);
+      output     <= shift_left(outMask(13 downto 0), 3);
       --output     <= outMask(13 downto 0);  
       level_prev := level;
     end if;

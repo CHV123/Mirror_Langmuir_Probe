@@ -117,13 +117,13 @@ begin  -- architecture Behavioral
           divisor_tdata <= "00" & std_logic_vector(divisor_mask);          
         end if;
         dividend_tdata  <= "00" &
-                           std_logic_vector(to_signed(to_integer(shift_right(signed(volt1), 1))-to_integer(signed(vFloat)), 14));
+                           std_logic_vector(to_signed(to_integer(shift_right(signed(volt1), 3))-to_integer(signed(vFloat)), 14));
         --dividend_tdata  <= "00" &
         --                   std_logic_vector(to_signed(to_integer(signed(volt1))-to_integer(signed(vFloat)), 14));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
-        --storeSig        <= shift_right(signed(volt_in), 1);
-        storeSig        <= signed(volt_in);
+        storeSig        <= shift_right(signed(volt_in), 3);
+        --storeSig        <= signed(volt_in);
       else
         -- making them zero otherwise, though strictly this should not be
         -- necessary as we're sending a tvalid signal

@@ -6,7 +6,7 @@
 -- Author     : Charles Vincent  <charliev@cmodws122>
 -- Company    : 
 -- Created    : 2018-04-16
--- Last update: 2018-04-27
+-- Last update: 2018-05-23
 -- Platform   : 
 -- Standard   : VHDL'93/02
 -------------------------------------------------------------------------------
@@ -39,13 +39,14 @@ architecture testbench of AcquireTrig_tb is
   -- component ports
   signal adc_clk : std_logic := '0';
 
-  signal AcqTime       : std_logic_vector(29 downto 0) := std_logic_vector(to_unsigned(100, 30));
+  signal AcqTime       : std_logic_vector(29 downto 0) := std_logic_vector(to_unsigned(50, 30));
   signal trigger       : std_logic                     := '0';
   signal timestamp     : std_logic_vector(24 downto 0) := (others => '0');
   signal acquire_valid : std_logic                     := '0';
   signal clear_pulse   : std_logic                     := '0';
 
   signal Temp_valid : std_logic                     := '0';
+  signal volt_valid : std_logic                     := '0';
   signal Temp       : std_logic_vector(15 downto 0) := (others => '0');
   signal iSat       : std_logic_vector(15 downto 0) := (others => '0');
   signal vFloat     : std_logic_vector(15 downto 0) := (others => '0');
@@ -65,17 +66,20 @@ begin  -- architecture testbench
     generic map (
       adc_clk_period => adc_clk_period)
     port map (
-      adc_clk       => adc_clk,
-      AcqTime       => AcqTime,
-      trigger       => trigger,
+      adc_clk => adc_clk,
+      AcqTime => AcqTime,
+      trigger => trigger,
+
       timestamp     => timestamp,
       acquire_valid => acquire_valid,
-      clear_pulse   => clear_pulse);
+      clear_pulse   => clear_pulse
+      );
 
   BUT : entity work.DataCollect
     port map(
       adc_clk    => adc_clk,
       Temp_valid => Temp_valid,
+      volt_valid => volt_valid,
       Temp       => Temp,
       iSat       => iSat,
       vFloat     => vFloat,
@@ -96,10 +100,22 @@ begin  -- architecture testbench
   begin
     wait for adc_clk_time*10;
     trigger <= '1';
-    wait for adc_clk_time*2;
+    wait for adc_clk_time*7000;
     trigger <= '0';
-    wait for 120 us;
+    wait for 2 us;
   end process Trigger_Proc;
+
+  -- purpose: Process to set volt valid
+  -- type   : combinational
+  -- inputs : 
+  -- outputs: volt_valid
+  volt_valid_proc: process is
+  begin  -- process volt_valid_proc
+    wait for adc_clk_time * 10;
+    volt_valid <= '1';
+    wait for adc_clk_time;
+    volt_valid <= '0';
+  end process volt_valid_proc;
 
 
 

@@ -33,30 +33,29 @@ public:
   {
     start_fifo_acquisition();
   }
-      
+  
   //  MLP
   void set_led(uint32_t led) {
     ctl.write<reg::led>(led);
   }
-
+  
   void set_trigger() {
     ctl.set_bit<reg::Trigger, 0>();
     ctl.clear_bit<reg::Trigger, 0>();
   }
-
-  void set_output(uint32_t bit_set) {
-    
+  
+  void set_output(uint32_t bit_set) {    
     if (bit_set == 0) {
       ctl.write<reg::Trigger>(0);
     } else{
       ctl.write<reg::Trigger>(2);
     }
   }
-
+  
   void set_period(uint32_t period) {
     ctl.write<reg::Period>(period);
   }
-
+  
   void set_acquisition_length(uint32_t acquisition_length) {
     ctl.write<reg::Acquisition_length>(acquisition_length);
   }
@@ -68,11 +67,11 @@ public:
   void set_scale_PC(uint32_t scale_PC) {
     ctl.write<reg::Scale_PC>(scale_PC);
   }
-
+  
   void set_offset_LB(uint32_t offset_LB) {
     ctl.write<reg::Offset_LB>(offset_LB);
   } 
-
+  
   void set_offset_PC(uint32_t offset_PC) {
     ctl.write<reg::Offset_PC>(offset_PC);
   }
@@ -81,17 +80,17 @@ public:
     uint32_t temp_value = sts.read<reg::Temperature>();
     return temp_value;
   }
-
+  
   uint32_t get_Isaturation() {
     uint32_t Isat_value = sts.read<reg::Isaturation>();
     return Isat_value;
   }
-
+  
   uint32_t get_vFloat() {
     uint32_t vFloat_value = sts.read<reg::vFloat>();
     return vFloat_value;
   }
-
+  
   uint32_t get_Timestamp() {
     uint32_t timestamp_value = sts.read<reg::Timestamp>();
     return timestamp_value;
@@ -121,19 +120,19 @@ public:
   
   
   void start_fifo_acquisition();
-
-   // Function to return the buffer length
+  
+  // Function to return the buffer length
   uint32_t get_buffer_length() {      
     return collected;
   }
   
   // Function to return data
   std::vector<uint32_t>& get_MLP_data() {
-
+    
     // Will only return a valid array if data is available
     if (dataAvailable) {      
       dataAvailable = false;
-		  
+      
       return adc_data;
       
     } else {
@@ -147,7 +146,7 @@ private:
   Memory<mem::control>& ctl;
   Memory<mem::status>& sts;
   Memory<mem::adc_fifo>& adc_fifo_map;
-
+  
   std::vector<uint32_t> adc_data;
   std::vector<uint32_t> empty_vector;
   
@@ -181,19 +180,14 @@ inline void MLP::fifo_acquisition_thread() {
   
   // While loop to reserve the number of samples needed to be collected
   while (fifo_acquisition_started){
-    // if (dataAvailable == true) {
-    //   ctx.log<INFO>("Reached checkpoint alpha");
-    // } else {
-    //   ctx.log<INFO>("Reached checkpoint charlie");
-    // }
     if (collected == 0){
       // Checking that data has not yet been collected      
       if ((dataAvailable == false) && (adc_data.size() > 0)){
-	// Sleep to avoid a race condition while data is being transferred
-	std::this_thread::sleep_for(fifo_sleep_for);
-	// Clearing vector back to zero
-	adc_data.resize(0);
-	ctx.log<INFO>("vector cleared, adc_data size: %d", adc_data.size());
+      	// Sleep to avoid a race condition while data is being transferred
+      	std::this_thread::sleep_for(fifo_sleep_for);
+      	// Clearing vector back to zero
+      	adc_data.resize(0);
+      	ctx.log<INFO>("vector cleared, adc_data size: %d", adc_data.size());
       }
     }
     
@@ -207,10 +201,8 @@ inline void MLP::fifo_acquisition_thread() {
 
 // Member function to fill buffer array
 inline uint32_t MLP::fill_buffer(uint32_t dropped) {
-    // Retrieving the number of samples to collect
+  // Retrieving the number of samples to collect
   uint32_t samples=get_fifo_length();
- 
-  // Checking for dropped samples
   
   // Collecting samples in buffer
   if (samples > 0) {

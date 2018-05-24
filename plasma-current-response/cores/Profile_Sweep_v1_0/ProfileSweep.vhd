@@ -12,6 +12,7 @@ entity ProfileSweep is
 
   port (
     adc_clk : in std_logic;             -- adc input clock
+    reset: in std_logic;
 
 
     Profile_address : out std_logic_vector(13 downto 0)
@@ -38,19 +39,31 @@ begin  -- architecture Behavioral
   begin 
     if (rising_edge(adc_clk)) then
 
-      if (rising_or_falling = '1') then
 
+
+      if (rising_or_falling = '1') then
+        if (reset = '1') then
+        addr_mask <= "00000000000010";
+        rising_or_falling <= '1';
+        Profile_address <= "00000000000001"; 
+        else
         addr_mask <= std_logic_vector(signed(addr_mask) + 1);
         Profile_address <= addr_mask;  
+        end if;
          if (addr_mask = "11111111111111") then
 
             rising_or_falling <= '0';
 
           end if;
       elsif (rising_or_falling = '0') then
-
+        if (reset = '1') then
+        addr_mask <= "00000000000010";
+        rising_or_falling <= '1';
+        Profile_address <= "00000000000001"; 
+        else
         addr_mask <= std_logic_vector(signed(addr_mask) - 1);
-        Profile_address <= addr_mask;         
+        Profile_address <= addr_mask;
+        end if;         
           if (addr_mask = "00000000000001") then
             rising_or_falling <= '1';
 

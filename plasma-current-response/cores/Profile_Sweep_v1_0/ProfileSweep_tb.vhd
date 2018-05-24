@@ -16,17 +16,17 @@ architecture behaviour of tb_ProfileSweep is
   component ProfileSweep is
     port (
     adc_clk : in std_logic;             -- adc input clock
+    reset : in std_logic;
 
-    Profile_address : out std_logic_vector(25 downto 0)
+    Profile_address : out std_logic_vector(13 downto 0)
       );
   end component ProfileSweep;
 
 ---------------------Signals for the ProfileSweep Block-----------------------
   -- input signals
   signal adc_clk : std_logic           := '0';
-  signal Profile_address : std_logic_vector(25 downto 0) := (others => '0');
-
-  signal Sims : std_logic_vector(3 downto 0) := (others => '0');
+  signal Profile_address : std_logic_vector(13 downto 0) := (others => '0');
+  signal reset : std_logic := '0';
 
   constant adc_clk_period : time := 8 ns; 
   
@@ -43,6 +43,7 @@ begin  -- architecture behaviour
     PORT MAP (
     	-- Inputs
       adc_clk => adc_clk,
+      reset => reset,
 
   		-- Outputs
       Profile_address => Profile_address
@@ -61,11 +62,11 @@ begin  -- architecture behaviour
   -- Stimulus process
   stim_proc : process
   begin
-    wait for adc_clk_period*10;
-
-    wait for adc_clk_period*10;
-
-
+ 	  reset <= '0';
+    wait for adc_clk_period*10000;
+    reset <= '1';
+    wait for  adc_clk_period*1;
+    
 end process;
 
 

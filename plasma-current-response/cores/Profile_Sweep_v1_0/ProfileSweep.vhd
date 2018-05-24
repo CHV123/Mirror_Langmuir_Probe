@@ -35,6 +35,7 @@ begin  -- architecture Behavioral
     if (rising_edge(adc_clk)) then
       if clk_rst = '1' then
         addr_mask <= (others => '0');
+        rising_or_falling <= '1';
       else
         if (rising_or_falling = '1') then
 

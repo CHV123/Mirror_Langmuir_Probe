@@ -263,6 +263,7 @@ connect_bd_net [get_bd_pins acquire_trigger_0/acquire_valid] [get_bd_pins blk_me
 connect_bd_net [get_bd_pins acquire_trigger_0/trigger] [get_bd_pins trigger_OR/Res]
 connect_bd_net [get_bd_pins ctl/Time_in] [get_bd_pins acquire_trigger_0/AcqTime]
 connect_bd_net [get_bd_pins acquire_trigger_0/timestamp] [get_bd_pins sts/Time_out]
+connect_bd_net [get_bd_pins acquire_trigger_0/clear_pulse] [get_bd_pins Profile_Sweep_0/reset]
 ##################################### Acquisition Trigger #################################################################
 ##################################### Connected all the Blocks ######################################################
 

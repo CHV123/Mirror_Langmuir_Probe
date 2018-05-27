@@ -15,7 +15,7 @@ entity SetVolts is
 
   generic (
     period     : integer := 40;
-    Temp_guess : integer := 100;
+    Temp_guess : integer := 400;
     negBias    : integer := -3;
     posBias    : integer := 1
     );
@@ -76,6 +76,7 @@ begin  -- architecture Behavioral
         if signed(Temp) > to_signed(0, Temp'length) then
           TempMask       <= unsigned(Temp);
           TempMask_proxy := shift_right(shift_left(TempMask_proxy, 5) - TempMask_proxy + unsigned(Temp), 5);
+          --TempMask_proxy := unsigned(Temp);
         else
           TempMask       <= to_unsigned(Temp_guess, TempMask'length);
           TempMask_proxy := to_unsigned(Temp_guess, TempMask'length);
@@ -160,7 +161,7 @@ begin  -- architecture Behavioral
   -- outputs: volt_ready
   en_calc_proc : process (adc_clk) is
   begin  -- process en_calc_proc
-    if counter = period_mask - 5 then
+    if counter = period_mask - 3 then
       case level is
         when 0      => volt_ready <= "01";
         when 1      => volt_ready <= "10";
@@ -177,15 +178,15 @@ begin  -- architecture Behavioral
   store_proc : process (adc_clk) is
   begin  -- process store_proc
     if rising_edge(adc_clk) then        -- rising clock edge
-      if counter = period_mask - 5 then
+      if counter = period_mask - 3 then
         store_en <= '1';
-      elsif counter = period_mask - 13 then
+      elsif counter = period_mask - 11 then
         store_en <= '1';
-      elsif counter = period_mask - 21 then
+      elsif counter = period_mask - 19 then
         store_en <= '1';
-      elsif counter = period_mask - 29 then
+      elsif counter = period_mask - 27 then
         store_en <= '1';
-      elsif counter = period_mask - 37 then
+      elsif counter = period_mask - 35 then
         store_en <= '1';
       else
         store_en <= '0';
@@ -208,7 +209,7 @@ begin  -- architecture Behavioral
           outMask := to_signed(0, outMask'length);
         end if;
       end if;
-      output     <= shift_left(outMask(13 downto 0), 3);
+      output     <= shift_left(outMask(13 downto 0), 0);
       --output     <= outMask(13 downto 0);  
       level_prev := level;
     end if;

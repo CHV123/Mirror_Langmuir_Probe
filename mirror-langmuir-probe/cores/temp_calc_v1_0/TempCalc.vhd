@@ -12,8 +12,8 @@ use ieee.numeric_std.all;
 
 entity TempCalc is
   generic (
-    Temp_guess   : integer := 100;
-    iSat_guess   : integer := -100;
+    Temp_guess   : integer := 400;
+    iSat_guess   : integer := -400;
     vFloat_guess : integer := 0);
   port (
     adc_clk        : in std_logic;      -- adc input clock
@@ -48,6 +48,7 @@ architecture Behavioral of TempCalc is
   signal storeSig        : signed(13 downto 0)   := (others => '0');
   signal storeSig2       : signed(15 downto 0)   := (others => '0');
   signal Temp_mask       : signed(31 downto 0)   := to_signed(Temp_guess, 32);
+  signal Temp_proxy      : signed(15 downto 0)   := to_signed(Temp_guess, 16);
   signal difference_hold : signed(15 downto 0)   := (others => '0');
 
   signal addr_mask_store : integer := 0;
@@ -63,6 +64,7 @@ architecture Behavioral of TempCalc is
 begin  -- architecture Behavioral
 
   index <= divider_tvalid;
+  Temp <= std_logic_vector(Temp_proxy);
 
   -- purpose: Process to do core reset
   -- type   : sequential
@@ -72,15 +74,19 @@ begin  -- architecture Behavioral
   begin  -- process reset_proc
     if rising_edge(adc_clk) then        -- rising clock edge
       if clk_rst = '1' then             -- synchronous reset (active high)
-        Temp <= std_logic_vector(to_unsigned(Temp_guess, 16));
+        Temp_proxy <= to_signed(Temp_guess, 16);
       else
         if output_trigger = '1' then
-          if Temp_mask > Temp_max then
-            Temp <= std_logic_vector(to_unsigned(8191, 16));
-          elsif Temp_mask < to_signed(0, Temp_mask'length) then
-            Temp <= std_logic_vector(to_unsigned(Temp_guess, 16));
+          if Temp_mask > to_signed(1200, Temp_mask'length) then
+            Temp_proxy <= to_signed(1200, 16);
+          elsif Temp_mask < to_signed(20, Temp_mask'length) then
+            if Temp_mask < to_signed(0, Temp_mask'length) then
+              Temp_proxy <= to_signed(Temp_guess, 16);
+            else
+              Temp_proxy <= to_signed(20, 16);
+            end if;
           else
-            Temp <= std_logic_vector(unsigned(Temp_mask(15 downto 0)));
+            Temp_proxy <= Temp_mask(15 downto 0);
           end if;
           data_valid <= '1';
         else
@@ -104,6 +110,7 @@ begin  -- architecture Behavioral
           Temp_mask <= shift_right(to_signed(to_integer(difference_hold) * to_integer(unsigned(BRAMret)), 32), 13);
         elsif calc_switch = "00" then
           Temp_mask <= shift_right(difference_hold * signed(BRAMret), 9);
+          --Temp_mask <= difference_hold * signed(BRAMret);
         end if;
         output_trigger <= '1';
       else
@@ -141,11 +148,11 @@ begin  -- architecture Behavioral
         else
           divisor_tdata <= "00" & std_logic_vector(to_signed(iSat_guess, 14));
         end if;
-        dividend_tdata  <= "00" & std_logic_vector(shift_right(signed(volt_in), 3));
+        dividend_tdata  <= "00" & std_logic_vector(shift_right(signed(volt_in), 0));
         --dividend_tdata  <= "00" & std_logic_vector(signed(volt_in));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
-        storeSig        <= shift_right(signed(volt2), 3);
+        storeSig        <= signed(volt2);
         --storeSig        <= signed(volt2);
         storeSig2       <= signed(vFloat);
       else

@@ -12,8 +12,8 @@ use ieee.numeric_std.all;
 
 entity iSatCalc is
   generic (
-    Temp_guess   : integer := 100;
-    iSat_guess   : integer := -100;
+    Temp_guess   : integer := 400;
+    iSat_guess   : integer := -400;
     vFloat_guess : integer := 0);
   port (
     adc_clk        : in std_logic;      -- adc input clock
@@ -47,7 +47,8 @@ architecture Behavioral of iSatCalc is
                                                     -- to wait for the bram return
   signal storeSig  : signed(13 downto 0)   := (others => '0');
 
-  signal iSat_mask : signed(29 downto 0) := to_signed(iSat_guess, 30);
+  signal iSat_mask  : signed(29 downto 0) := to_signed(iSat_guess, 30);
+  signal iSat_proxy : signed(15 downto 0) := to_signed(iSat_guess, 16);
 
   signal addr_mask_store : integer := 0;
   signal int_store       : integer := 0;
@@ -60,6 +61,7 @@ architecture Behavioral of iSatCalc is
 begin  -- architecture Behavioral
 
   index <= divider_tvalid;
+  iSat <= std_logic_vector(iSat_proxy);
 
   -- purpose: Process to do core reset
   -- type   : sequential
@@ -69,10 +71,10 @@ begin  -- architecture Behavioral
   begin  -- process reset_proc
     if rising_edge(adc_clk) then        -- rising clock edge
       if clk_rst = '1' then             -- synchronous reset (active high)
-        iSat <= std_logic_vector(to_signed(iSat_guess, 16));
+        iSat_proxy <= to_signed(iSat_guess, 16);
       else
         if output_trigger = '1' then
-          iSat <= std_logic_vector(iSat_mask(15 downto 0));
+          iSat_proxy <= iSat_mask(15 downto 0);
         end if;
       end if;
     end if;
@@ -90,6 +92,7 @@ begin  -- architecture Behavioral
           iSat_mask <= shift_right(storeSig * signed(BRAMret), 13);
         else
           iSat_mask <= shift_right(storeSig * signed(BRAMret), 2);
+          --iSat_mask <= storeSig * signed(BRAMret);
         end if;
         data_valid     <= '1';
         output_trigger <= '1';
@@ -117,13 +120,13 @@ begin  -- architecture Behavioral
           divisor_tdata <= "00" & std_logic_vector(divisor_mask);          
         end if;
         dividend_tdata  <= "00" &
-                           std_logic_vector(to_signed(to_integer(shift_right(signed(volt1), 3))-to_integer(signed(vFloat)), 14));
+                           std_logic_vector(to_signed(to_integer(shift_right(signed(volt1), 0))-to_integer(signed(vFloat)), 14));
         --dividend_tdata  <= "00" &
         --                   std_logic_vector(to_signed(to_integer(signed(volt1))-to_integer(signed(vFloat)), 14));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
-        storeSig        <= shift_right(signed(volt_in), 3);
-        --storeSig        <= signed(volt_in);
+        --storeSig        <= shift_right(signed(volt_in), 2);
+        storeSig        <= signed(volt_in);
       else
         -- making them zero otherwise, though strictly this should not be
         -- necessary as we're sending a tvalid signal

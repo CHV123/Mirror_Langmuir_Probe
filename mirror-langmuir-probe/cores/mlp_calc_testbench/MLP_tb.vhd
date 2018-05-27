@@ -34,7 +34,7 @@ architecture test_bench of tb_MLP is
   signal period    : std_logic_vector(31 downto 0) := (others => '0');
   signal Temp_In   : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(100, 16));
   signal iSat_In   : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(-100, 16));
-  signal vFloat_In : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(-10, 16));
+  signal vFloat_In : std_logic_vector(15 downto 0) := std_logic_vector(to_signed(0, 16));
   signal Reset_in  : std_logic := '0';
 
   signal LP_voltage : std_logic_vector(13 downto 0) := (others => '0');

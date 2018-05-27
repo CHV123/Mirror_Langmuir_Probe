@@ -11,8 +11,8 @@ use ieee.numeric_std.all;
 
 entity vFloatCalc is
   generic (
-    Temp_guess   : integer := 100;
-    iSat_guess   : integer := -100;
+    Temp_guess   : integer := 400;
+    iSat_guess   : integer := -400;
     vFloat_guess : integer := 0);
   port (
     adc_clk        : in std_logic;      -- adc input clock
@@ -47,6 +47,7 @@ architecture Behavioral of vFloatCalc is
   signal storeSig        : signed(13 downto 0)   := (others => '0');
   signal storeSig2       : signed(15 downto 0)   := (others => '0');
   signal vFloat_mask     : signed(31 downto 0)   := to_signed(vFloat_guess, 32);
+  signal vFloat_proxy    : signed(15 downto 0)   := to_signed(vFloat_guess, 16);
   signal difference_hold : signed(15 downto 0)   := (others => '0');
 
   signal addr_mask_store : integer := 0;
@@ -60,6 +61,7 @@ architecture Behavioral of vFloatCalc is
 begin  -- architecture Behavioral
 
   index <= divider_tvalid;
+  vFloat <= std_logic_vector(vFloat_proxy);
 
   -- purpose: Process to do core reset
   -- type   : sequential
@@ -69,10 +71,10 @@ begin  -- architecture Behavioral
   begin  -- process reset_proc
     if rising_edge(adc_clk) then        -- rising clock edge
       if clk_rst = '1' then             -- synchronous reset (active high)
-        vFloat <= std_logic_vector(to_signed(vFloat_guess, 16));
+        vFloat_proxy <= to_signed(vFloat_guess, 16);
       else
         if output_trigger = '1' then
-          vFloat <= std_logic_vector(vFloat_mask(15 downto 0));
+          vFloat_proxy <= vFloat_mask(15 downto 0);
         end if;
       end if;
     end if;
@@ -129,12 +131,12 @@ begin  -- architecture Behavioral
         else
           divisor_tdata <= "00" & std_logic_vector(to_signed(iSat_guess, 14));
         end if;
-        dividend_tdata  <= "00" & std_logic_vector(shift_right(signed(volt_in), 3));
+        dividend_tdata  <= "00" & std_logic_vector(shift_right(signed(volt_in), 0));
         --dividend_tdata  <= "00" & std_logic_vector(signed(volt_in));
         dividend_tvalid <= '1';
         divisor_tvalid  <= '1';
-        storeSig        <= shift_right(signed(volt3), 3);
-        --storeSig        <= signed(volt3);
+        --storeSig        <= shift_right(signed(volt3), 2);
+        storeSig        <= signed(volt3);
         storeSig2       <= signed(Temp);
       else
         -- making them zero otherwise, though strictly this should not be

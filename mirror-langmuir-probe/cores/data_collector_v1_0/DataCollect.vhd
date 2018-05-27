@@ -98,9 +98,9 @@ begin  -- architecture Behavioral
           temp_stored <= '1';
           data_hold_t <= "1" &
                          std_logic_vector(timestamp) &
-                         std_logic_vector(unsigned(Temp(7 downto 0))) &
+                         std_logic_vector(unsigned(Temp(9 downto 2))) &
                          std_logic_vector(shift_right(signed(iSat), 2)(8 downto 0)) &
-                         std_logic_vector(signed(vFloat(8 downto 0)));
+                         std_logic_vector(signed(vFloat(10 downto 2)));
         else
           if delivered_t = '1' then
             temp_stored <= '0';

@@ -19,6 +19,7 @@ cores:
   - instruments/plasma-current-response/cores/acquire_trigger_v1_0
   - instruments/plasma-current-response/cores/clock_counter_v1_0
   - instruments/plasma-current-response/cores/output_mux_v1_0
+  - instruments/plasma-current-response/cores/delay_signal_v1_0
 
 memory:
   - name: control

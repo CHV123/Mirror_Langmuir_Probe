@@ -105,6 +105,7 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 switch_to_mux
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 temp_slice
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 isat_slice
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 vfloat_slice
+create_bd_cell -type ip -vlnv PSFC:user:delay_signal:1.0 LB_delay
 ################################### All Blocks Made #####################################################
 
 ################################### Connect All the Blocks ##############################################
@@ -156,19 +157,19 @@ connect_bd_net [get_bd_pins Profile_Sweep_0/Profile_address] [get_bd_pins blk_me
 ##################################### ISAT MemBlock   ##################################################################
 set_property -dict [list CONFIG.use_bram_block {Stand_Alone} CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Write_Enable {false} CONFIG.Byte_Size {9} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {8192} CONFIG.Read_Width_A {14} CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {13} CONFIG.Read_Width_B {13} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Use_RSTA_Pin {false} CONFIG.EN_SAFETY_CKT {false}] [get_bd_cells blk_mem_gen_ISAT]
 connect_bd_net [get_bd_pins blk_mem_gen_ISAT/clka] [get_bd_pins adc_dac/adc_clk]
-set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/plasma-current-response/Profiles/Test_6/Isat.coe}] [get_bd_cells blk_mem_gen_ISAT]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/plasma-current-response/Profiles/1160628014/iSat.coe}] [get_bd_cells blk_mem_gen_ISAT]
 ##################################### ISAT MemBlock ####################################################################
 
 ##################################### Temp MemBlock ###################################################################
 set_property -dict [list CONFIG.use_bram_block {Stand_Alone} CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Write_Enable {false} CONFIG.Byte_Size {9} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {8192} CONFIG.Read_Width_A {14} CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {13} CONFIG.Read_Width_B {13} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Use_RSTA_Pin {false} CONFIG.EN_SAFETY_CKT {false}] [get_bd_cells blk_mem_gen_Temp]
 connect_bd_net [get_bd_pins blk_mem_gen_Temp/clka] [get_bd_pins adc_dac/adc_clk]
-set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/plasma-current-response/Profiles/Test_7/Te.coe}] [get_bd_cells blk_mem_gen_Temp]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/plasma-current-response/Profiles/1160628014/Temp.coe}] [get_bd_cells blk_mem_gen_Temp]
 ##################################### Temp MemBlock ###################################################################
 
 ##################################### Vfloating MemBlock ###################################################################
 set_property -dict [list CONFIG.use_bram_block {Stand_Alone} CONFIG.Enable_32bit_Address {false} CONFIG.Use_Byte_Write_Enable {false} CONFIG.Byte_Size {9} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {8192} CONFIG.Read_Width_A {14} CONFIG.Operating_Mode_A {READ_FIRST} CONFIG.Enable_A {Always_Enabled} CONFIG.Write_Width_B {13} CONFIG.Read_Width_B {13} CONFIG.Register_PortA_Output_of_Memory_Primitives {true} CONFIG.Use_RSTA_Pin {false} CONFIG.EN_SAFETY_CKT {false}] [get_bd_cells blk_mem_gen_Vfloating]
 connect_bd_net [get_bd_pins blk_mem_gen_Vfloating/clka] [get_bd_pins adc_dac/adc_clk]
-set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/plasma-current-response/Profiles/Test_7/Vf.coe}] [get_bd_cells blk_mem_gen_Vfloating]
+set_property -dict [list CONFIG.Load_Init_File {true} CONFIG.Coe_File {/home/charlesv/MLP_project/koheron-sdk/instruments/plasma-current-response/Profiles/1160628014/vFloat.coe}] [get_bd_cells blk_mem_gen_Vfloating]
 ##################################### Vfloating MemBlock ###################################################################
 
 ####################################### Multiplex for Temp, iSat and vFloat ################################################
@@ -236,11 +237,12 @@ connect_bd_net [get_bd_pins manual_calibration_0/adc_clk] [get_bd_pins adc_dac/a
 #connect_bd_net [get_bd_pins ctl/led] [get_bd_pins manual_calibration_0/volt_in] ; # Set number operation
 connect_bd_net [get_bd_pins adc_dac/adc1] [get_bd_pins manual_calibration_0/volt_in] ; # Normal operation
 connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins current_response_0/Bias_voltage]
-connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins adc_dac/dac2]
+#connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins adc_dac/dac2]
+connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins LB_delay/input]
 connect_bd_net [get_bd_pins manual_calibration_0/volt_out] [get_bd_pins sts/Bias]
 connect_bd_net [get_bd_pins ctl/Calibration_offset] [get_bd_pins manual_calibration_0/offset]
 connect_bd_net [get_bd_pins ctl/Calibration_scale] [get_bd_pins manual_calibration_0/scale]
-connect_bd_net [get_bd_pins data_collector_0/v_in] [get_bd_pins manual_calibration_0/volt_out]
+#connect_bd_net [get_bd_pins data_collector_0/v_in] [get_bd_pins manual_calibration_0/volt_out]
 ##################################### Man Calibration #####################################################################
 
 ##################################### Data Collector ######################################################################
@@ -265,6 +267,12 @@ connect_bd_net [get_bd_pins acquire_trigger_0/trigger] [get_bd_pins trigger_OR/R
 connect_bd_net [get_bd_pins ctl/Time_in] [get_bd_pins acquire_trigger_0/AcqTime]
 connect_bd_net [get_bd_pins acquire_trigger_0/timestamp] [get_bd_pins sts/Time_out]
 ##################################### Acquisition Trigger #################################################################
+
+###################################### Loopback delay #####################################################################
+connect_bd_net [get_bd_pins LB_delay/adc_clk] [get_bd_pins adc_dac/adc_clk]
+connect_bd_net [get_bd_pins LB_delay/output] [get_bd_pins adc_dac/dac2]
+connect_bd_net [get_bd_pins data_collector_0/v_in] [get_bd_pins LB_delay/output]
+###################################### Loopback delay #####################################################################
 ##################################### Connected all the Blocks ######################################################
 
 

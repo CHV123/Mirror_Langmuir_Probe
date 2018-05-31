@@ -190,7 +190,8 @@ begin  -- architecture Behavioral
         store_en <= '1';
       else
         store_en <= '0';
-      end if;
+      end if; 
+      --store_en <= '1';
     end if;
   end process store_proc;
 

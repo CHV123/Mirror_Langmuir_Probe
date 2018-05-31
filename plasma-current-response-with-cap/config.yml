@@ -9,14 +9,14 @@ cores:
   - fpga/cores/axi_ctl_register_v1_0
   - fpga/cores/axi_sts_register_v1_0
   - fpga/cores/dna_reader_v1_0
-  - instruments/plasma-current-response/cores/current_response_v1_0
-  - instruments/plasma-current-response/cores/Div_to_address_v1_0
-  - instruments/plasma-current-response/cores/Profile_Sweep_v1_0 
-  - instruments/plasma-current-response/cores/input_control_v1_0
-  - instruments/plasma-current-response/cores/Div_int_delay_v1_0
-  - instruments/plasma-current-response/cores/manual_calibration_v1_0
-  - instruments/plasma-current-response/cores/data_collector_v1_0
-  - instruments/plasma-current-response/cores/acquire_trigger_v1_0
+  - instruments/plasma-current-response-with-cap/cores/current_response_v1_0
+  - instruments/plasma-current-response-with-cap/cores/Div_to_address_v1_0
+  - instruments/plasma-current-response-with-cap/cores/Profile_Sweep_v1_0 
+  - instruments/plasma-current-response-with-cap/cores/input_control_v1_0
+  - instruments/plasma-current-response-with-cap/cores/Div_int_delay_v1_0
+  - instruments/plasma-current-response-with-cap/cores/manual_calibration_v1_0
+  - instruments/plasma-current-response-with-cap/cores/data_collector_v1_0
+  - instruments/plasma-current-response-with-cap/cores/acquire_trigger_v1_0
 
 memory:
   - name: control

@@ -20,7 +20,8 @@ component Current_response_test is
 		Temp : in STD_LOGIC_vector(13 downto 0);
 		Vf : in STD_LOGIC_vector(13 downto 0);
 		Bias : in STD_LOGIC_vector(13 downto 0);
-
+        
+        Bias_delay : out STD_LOGIC_VECTOR(13 downto 0);
 		Current : out STD_LOGIC_vector(13 downto 0)
 	);
 end component Current_response_test;
@@ -32,13 +33,14 @@ signal  Temp : STD_LOGIC_vector(13 downto 0) := (others => '0');
 signal  Vf : STD_LOGIC_vector(13 downto 0) := (others => '0');
 signal  Bias : STD_LOGIC_vector(13 downto 0) := (others => '0');
 
+signal  Bias_delay : STD_LOGIC_vector(13 downto 0) := (others => '0');
 signal  Current : STD_LOGIC_vector(13 downto 0) := (others => '0');
 
 constant adc_clk_period : time := 8 ns; 
 
 begin  -- architecture behaviour
   
-instance_name : Current_response_test
+test_blks : Current_response_test
 port map (
 	clk => input_clk,
 	Isat => Isat,
@@ -46,7 +48,8 @@ port map (
 	Temp => Temp,
 	Vf => Vf,
 	Bias => Bias,
-
+    
+    Bias_delay => Bias_delay,
 	Current => Current
 );
 

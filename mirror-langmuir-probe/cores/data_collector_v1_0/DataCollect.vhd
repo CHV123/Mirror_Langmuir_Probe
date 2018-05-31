@@ -75,8 +75,8 @@ begin  -- architecture Behavioral
           volt_stored <= '1';
           data_hold_v <= "0" &
                          std_logic_vector(timestamp) &
-                         v_in(12 downto 0) &
-                         v_out(12 downto 0);
+                         v_in(13 downto 1) &
+                         v_out(13 downto 1);
         else
           if delivered_v = '1' then
             volt_stored <= '0';

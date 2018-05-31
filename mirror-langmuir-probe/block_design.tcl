@@ -334,6 +334,7 @@ connect_bd_net [get_bd_pins Temp_calc/data_valid] [get_bd_pins data_collector/Te
 # connect_bd_net [get_bd_pins set_voltage/Temp_en] [get_bd_pins data_collector/Temp_valid]
 connect_bd_net [get_bd_pins moving_average_LB/volt_out] [get_bd_pins data_collector/v_out]
 connect_bd_net [get_bd_pins moving_average_PC/volt_out] [get_bd_pins data_collector/v_in]
+# connect_bd_net [get_bd_pins set_voltage/volt_out] [get_bd_pins data_collector/v_in]
 connect_bd_net [get_bd_pins data_collector/tdata] [get_bd_pins adc_clock_converter/s_axis_tdata]
 connect_bd_net [get_bd_pins data_collector/tvalid] [get_bd_pins adc_clock_converter/s_axis_tvalid]
 connect_bd_net [get_bd_pins data_collector/volt_valid] [get_bd_pins set_voltage/store_en]

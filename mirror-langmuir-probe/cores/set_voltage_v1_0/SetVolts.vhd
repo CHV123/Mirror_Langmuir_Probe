@@ -25,8 +25,8 @@ entity SetVolts is
     period_in  : in std_logic_vector(31 downto 0);
     Temp       : in std_logic_vector(15 downto 0);  -- Temperature sets the voltage bias
     Temp_valid : in std_logic;
-    
-    store_en   : out std_logic;
+
+    store_en  : out std_logic;
     volt_out  : out std_logic_vector(13 downto 0);
     iSat_en   : out std_logic;
     vFloat_en : out std_logic;
@@ -76,7 +76,7 @@ begin  -- architecture Behavioral
         if signed(Temp) > to_signed(0, Temp'length) then
           TempMask       <= unsigned(Temp);
           TempMask_proxy := shift_right(shift_left(TempMask_proxy, 5) - TempMask_proxy + unsigned(Temp), 5);
-          --TempMask_proxy := unsigned(Temp);
+        --TempMask_proxy := unsigned(Temp);
         else
           TempMask       <= to_unsigned(Temp_guess, TempMask'length);
           TempMask_proxy := to_unsigned(Temp_guess, TempMask'length);
@@ -149,32 +149,59 @@ begin  -- architecture Behavioral
           counter <= 0;
         end if;  -- end of counter decision
       end if;
-      if clk_rst = '1' then  		-- if this reset changes then tell Will
+      if clk_rst = '1' then             -- if this reset changes then tell Will
         level <= 0;
       end if;
     end if;  -- end of rising edge
   end process;
 
-  -- purpose: Process to set when each calculation module is enabled
+  -- purpose: Process to set when each calculation module is enabled when there is no delay
+  -- type   : combinational
+  -- inputs : adc_clk
+  -- outputs: volt_ready
+  --en_calc_proc : process (adc_clk) is
+  --begin  -- process en_calc_proc
+  --  if rising_edge(adc_clk) then
+  --    if counter = period_mask - 3 then
+  --      case level is
+  --        when 0      => volt_ready <= "01";
+  --        when 1      => volt_ready <= "10";
+  --        when 2      => volt_ready <= "11";
+  --        when others => null;
+  --      end case;
+  --    end if;
+  --  end if;
+  --end process en_calc_proc;
+
+  -- purpose: Process to set when each calculation module is enabled when there
+  -- is a delay
   -- type   : combinational
   -- inputs : adc_clk
   -- outputs: volt_ready
   en_calc_proc : process (adc_clk) is
+    variable delay_count : integer   := 0;
+    variable start_count : std_logic := '0';
   begin  -- process en_calc_proc
-    if counter = period_mask - 3 then
-      case level is
-        when 0      => volt_ready <= "01";
-        when 1      => volt_ready <= "10";
-        when 2      => volt_ready <= "11";
-        when others => null;
-      end case;
+    if rising_edge(adc_clk) then
+      if counter = period_mask - 3 then
+        delay_count := 0;
+      end if;
+      if delay_count = 35 then
+        case level is
+          when 1      => volt_ready <= "01"; -- set iSat
+          when 2      => volt_ready <= "10"; -- set Temp
+          when 0      => volt_ready <= "11"; -- set vFloat
+          when others => null;
+        end case;
+      end if;
+      delay_count := delay_count + 1;
     end if;
   end process en_calc_proc;
 
-  -- purpose: Process to set what points are stored
-  -- type   : sequential
-  -- inputs : adc_clk, counter
-  -- outputs: store_en
+-- purpose: Process to set what points are stored 
+-- type   : sequential
+-- inputs : adc_clk, counter
+-- outputs: store_en
   store_proc : process (adc_clk) is
   begin  -- process store_proc
     if rising_edge(adc_clk) then        -- rising clock edge
@@ -190,12 +217,12 @@ begin  -- architecture Behavioral
         store_en <= '1';
       else
         store_en <= '0';
-      end if; 
-      --store_en <= '1';
+      end if;
+    --store_en <= '1';
     end if;
   end process store_proc;
 
-  -- Setting the output to various voltage levels
+-- Setting the output to various voltage levels
   set_proc : process(adc_clk)
     variable outMask    : signed(20 downto 0) := to_signed(Temp_guess*negBias, 21);
     variable level_prev : integer             := 0;
